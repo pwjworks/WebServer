@@ -1,1 +1,3 @@
-add_library(${PROJECT_NAME} server/epoller.cpp)
+add_library(webserver_lib server/Epoller.cpp
+        server/Server.cpp
+        )
