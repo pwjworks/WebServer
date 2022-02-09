@@ -15,7 +15,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-#include_directories(./code/log ./code/pool ./code/timer ./code/http ./code/buffer)
+include_directories(./src/server ./test)
 
 add_subdirectory(src)
 add_subdirectory(test)
