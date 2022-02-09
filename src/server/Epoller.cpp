@@ -19,7 +19,9 @@ void Epoller::epoll_add(int fd, __uint32_t fd_events_, int timeout) const {
   event.data.fd = fd;
   event.events = fd_events_;
   if (epoll_ctl(epollFd_, EPOLL_CTL_ADD, fd, &event) < 0) {
-    std::cout << "epoll add error!";
+    std::cout << "epoll add error!" << std::endl;
+  } else {
+    std::cout << "epoll add success!" << std::endl;
   }
 }
 
@@ -41,10 +43,14 @@ void Epoller::epoll_del(int fd, __uint32_t fd_events_) const {
   }
 }
 
-void Epoller::poll() {
+int Epoller::poll() {
   while (true) {
     int event_count = epoll_wait(epollFd_, &*events_.begin(), events_.size(), EPOLLWAIT_TIME);
     if (event_count < 0) std::cout << "epoll wait error";
-    if (event_count > 0) return;
+    if (event_count == 0) continue;
+    return event_count;
   }
+}
+const std::vector<epoll_event> &Epoller::getEvents() const {
+  return events_;
 }

@@ -8,8 +8,14 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-Server::Server(int port) : listen_fd_(server_fd_init(port)) {
+Server::Server(int port) : listen_fd_(server_fd_init(port)), epoller_(std::make_shared<Epoller>()) {
   assert(listen_fd_ != -1);
+  assert(epoller_ != nullptr);
+  epoller_->epoll_add(listen_fd_, EPOLLIN, 1000);
+}
+
+Server::~Server() {
+  close(listen_fd_);
 }
 
 int Server::server_fd_init(int port) {
@@ -49,4 +55,11 @@ int Server::server_fd_init(int port) {
     return -1;
   }
   return listen_fd;
+}
+
+int Server::getListenFd() const {
+  return listen_fd_;
+}
+const std::shared_ptr<Epoller> &Server::getEpoller() const {
+  return epoller_;
 }
