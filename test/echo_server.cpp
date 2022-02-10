@@ -7,22 +7,25 @@
 #include <fcntl.h>
 #include <iostream>
 #include <netinet/in.h>
-#include <unistd.h>
 
 echo_server::echo_server(int port) : Server(port) {
 }
 
 void echo_server::start() {
-  while ((event_count_ = getEpoller()->poll()) <= 0) std::cout << event_count_ << std::endl;
-  assert(event_count_ >= 0);
-  std::cout << "poll finish!" << std::endl;
-  for (size_t i = 0; i < event_count_; i++) {
-    if (getEpoller()->getEvents()[i].events & EPOLLIN) {
-      handleNewConn();
-    } else {
+  while (true) {
+    while ((event_count_ = getEpoller()->poll()) <= 0) std::cout << event_count_ << std::endl;
+    assert(event_count_ >= 0);
+    std::cout << "poll finish!" << std::endl;
+    for (size_t i = 0; i < event_count_; i++) {
+      if (getEpoller()->getEvents()[i].events & EPOLLIN) {
+        if (getEpoller()->getEvents()[i].data.fd == getListenFd())
+          handleNewConn();
+        else
+          handleRead(getEpoller()->getEvents()[i].data.fd);
+      } else {
+      }
     }
   }
-  std::cout << "start out!" << std::endl;
 }
 
 
@@ -50,7 +53,14 @@ int echo_server::setSocketNonBlocking(int fd) {
 }
 
 void echo_server::handleRead(int fd) {
-  int m;
+  int m = recv(fd, buf_, 100, 0);
+  if (m == 0) {
+    getEpoller()->epoll_del(fd);
+  } else if (m < 0) {
+    std::cout << "recv error!" << std::endl;
+  } else {
+    std::cout << "recv from cliend:" << fd << ", " << buf_ << std::endl;
+  };
 }
 
 void echo_server::handleWrite() {

@@ -34,11 +34,8 @@ void Epoller::epoll_mod(int fd, __uint32_t fd_events_, int timeout) const {
   }
 }
 
-void Epoller::epoll_del(int fd, __uint32_t fd_events_) const {
-  struct epoll_event event {};
-  event.data.fd = fd;
-  event.events = fd_events_;
-  if (epoll_ctl(epollFd_, EPOLL_CTL_DEL, fd, &event) < 0) {
+void Epoller::epoll_del(int fd) const {
+  if (epoll_ctl(epollFd_, EPOLL_CTL_DEL, fd, nullptr) < 0) {
     std::cout << "epoll del error!";
   }
 }

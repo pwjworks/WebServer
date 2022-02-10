@@ -12,10 +12,11 @@ public:
   * @brief 处理并接受新的连接
   */
   void handleNewConn();
-  void handleRead();
+  void handleRead(int);
   void handleWrite();
 
 private:
   int event_count_{};
   int setSocketNonBlocking(int fd);
+  char buf_[100];
 };

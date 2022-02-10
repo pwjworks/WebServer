@@ -11,7 +11,7 @@ public:
   ~Epoller();
   void epoll_add(int fd, __uint32_t events_, int timeout) const;
   void epoll_mod(int fd, __uint32_t fd_events_, int timeout) const;
-  void epoll_del(int fd, __uint32_t fd_events_) const;
+  void epoll_del(int fd) const;
   int poll();
 
 private:

@@ -42,12 +42,12 @@ int main(int argc, char *argv[]) {
     if (!strcmp(message, "q\n") || !strcmp(message, "Q\n"))
       break;
     send(sock, message, strlen(message), 0);
-    ssize_t str_len = recv(sock, message, 100, 0);
-    printf("recv size:%zu\n", strlen(message));
-    if (str_len == -1)
-      break;
-    message[str_len] = 0;
-    printf("Message from server: %s", message);
+    //    ssize_t str_len = recv(sock, message, 100, 0);
+    //    printf("recv size:%zu\n", strlen(message));
+    //    if (str_len == -1)
+    //      break;
+    //    message[str_len] = 0;
+    //    printf("Message from server: %s", message);
   }
   close(sock);
   return 0;
