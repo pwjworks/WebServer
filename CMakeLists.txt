@@ -15,7 +15,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-include_directories(./src/server ./test)
+include_directories(./src/server ./test ./src/eventloop)
 
 add_subdirectory(src)
 add_subdirectory(test)
