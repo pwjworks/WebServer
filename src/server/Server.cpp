@@ -8,11 +8,9 @@
 
 using namespace std;
 
-const int EVENTSNUM = 4096;
 
-Server::Server(int port) : listenfd_(socket(AF_INET, SOCK_STREAM, 0)), epollfd_(epoll_create(1)), events_(EVENTSNUM) {
+Server::Server(int port) : listenfd_(socket(AF_INET, SOCK_STREAM, 0)), epoller_(make_shared<Epoller>()) {
   assert(listenfd_ != -1);
-  assert(epollfd_ != -1);
   assert(server_fd_init(port) == true);
   assert(set_nonblock(listenfd_) == true);
 }
@@ -41,14 +39,18 @@ bool Server::server_fd_init(int port) {
   bindaddr.sin_family = AF_INET;
   bindaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   bindaddr.sin_port = htons(port);
-  epoll_add(listenfd_, EPOLLIN, 1000);
 
+  // 把监听文件描述符加入epoller中
+  epoller_->epoll_add(listenfd_, EPOLLIN, 1000);
+
+  // 绑定端口
   if (bind(listenfd_, (struct sockaddr *) &bindaddr, sizeof(bindaddr)) == -1) {
     cout << "bind listen socket error." << endl;
     close(listenfd_);
     return false;
   }
 
+  // 监听端口
   if (listen(listenfd_, SOMAXCONN) == -1) {
     cout << "listen error." << endl;
     close(listenfd_);
@@ -57,34 +59,36 @@ bool Server::server_fd_init(int port) {
   return true;
 }
 
-bool Server::accept_newconn() {
+bool Server::accept_new_conn() {
   struct sockaddr_in clitenaddr;
   socklen_t clientaddrlen = sizeof clitenaddr;
   // 接收新连接
   int clientfd = accept(listenfd_, (struct sockaddr *) &clitenaddr, &clientaddrlen);
   if (clientfd == -1) return false;
   if (!set_nonblock(clientfd)) return false;
-  // 加入到epoll中，监听此fd
-  epoll_add(clientfd, EPOLLIN, 1000);
+  // 加入到epoller中，监听此描述符
+  epoller_->epoll_add(clientfd, EPOLLIN, 1000);
   return true;
 }
 
-void Server::handleRead(int index) {
+void Server::handle_read(int index) {
+  // 简单打印客户端的信息
   char *buf = new char[1024];
-  int fd = events_[index].data.fd;
+  int fd = epoller_->getEvents()[index].data.fd;
   int m = recv(fd, buf, 1024, 0);
-  if (m <= 0) epoll_del(fd);
+  if (m <= 0) epoller_->epoll_del(fd);
   else {
     cout << "recv from client: " << fd << "," << buf << endl;
   }
 }
 
 
-void Server::Start() {
+void Server::start() {
   cout << "Running..." << endl;
+
   while (true) {
     cout << "Running..." << endl;
-    int n = epoll_wait(epollfd_, &*events_.begin(), EVENTSNUM, 1000);
+    int n = epoller_->poll();
     if (n < 0) {
       if (errno == EINTR)
         continue;
@@ -93,37 +97,11 @@ void Server::Start() {
       continue;
     }
     for (size_t i = 0; i < n; ++i) {
-      if (events_[i].events & EPOLLIN) {
-        if (events_[i].data.fd == listenfd_ && !accept_newconn()) cout << "accept error!";
+      if (epoller_->getEvents()[i].events & EPOLLIN) {
+        if (epoller_->getEvents()[i].data.fd == listenfd_ && !accept_new_conn()) cout << "accept error!";
         else
-          handleRead(i);
+          handle_read(i);
       }
     }
-  }
-}
-
-void Server::epoll_add(const int &fd, __uint32_t fd_events_, int timeout) {
-  struct epoll_event event {};
-  event.data.fd = fd;
-  event.events = fd_events_;
-  if (epoll_ctl(epollfd_, EPOLL_CTL_ADD, fd, &event) < 0) {
-    std::cout << "epoll add error!" << std::endl;
-  } else {
-    std::cout << "epoll add success!" << std::endl;
-  }
-}
-
-void Server::epoll_mod(const int &fd, __uint32_t fd_events_, int timeout) {
-  struct epoll_event event {};
-  event.data.fd = fd;
-  event.events = fd_events_;
-  if (epoll_ctl(epollfd_, EPOLL_CTL_MOD, fd, &event) < 0) {
-    std::cout << "epoll mod error!";
-  }
-}
-
-void Server::epoll_del(const int &fd) {
-  if (epoll_ctl(epollfd_, EPOLL_CTL_DEL, fd, nullptr) < 0) {
-    std::cout << "epoll del error!";
   }
 }

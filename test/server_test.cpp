@@ -8,6 +8,6 @@
 
 int main() {
   auto server = std::make_shared<Server>(12345);
-  server->Start();
+  server->start();
   return 0;
 }
