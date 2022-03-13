@@ -16,9 +16,6 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 include_directories(./src/server ./test
-        ./src/eventloop
-        ./src/channel
-        ./src/timer
         )
 
 add_subdirectory(src)

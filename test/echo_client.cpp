@@ -1,6 +1,3 @@
-//
-// Created by pwjworks on 2022/2/9.
-//
 #include <arpa/inet.h>
 #include <cstdlib>
 #include <cstring>
