@@ -4,7 +4,6 @@
 
 
 #include "Server.h"
-#include <memory>
 
 int main() {
   auto server = std::make_shared<Server>(12345);

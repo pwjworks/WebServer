@@ -15,7 +15,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-include_directories(./src/server ./test ./src/epoller
+include_directories(./src/server ./test ./src/epoller ./src/http
         )
 
 add_subdirectory(src)
