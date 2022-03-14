@@ -1,4 +1,5 @@
 #include "Epoller.h"
+#include "HttpData.h"
 #include <memory>
 #include <sys/epoll.h>
 #include <vector>
@@ -6,7 +7,8 @@
 
 class Server {
 public:
-  typedef std::shared_ptr<Epoller> Epoller_ptr;
+  typedef std::shared_ptr<Epoller> EpollerPtr;
+  typedef std::shared_ptr<HttpData> HttpDataPtr;
   explicit Server(int port);
   ~Server();
 
@@ -27,10 +29,12 @@ public:
    * @return 是否接受成功
    */
   bool accept_new_conn();
-  void handle_read(int index);
+  void handle_read(int fd);
+  void handle_write(int fd);
   void start();
 
 private:
-  Epoller_ptr epoller_;
+  EpollerPtr epoller_;
+  HttpDataPtr http_data_;
   int listenfd_;
 };

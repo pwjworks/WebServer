@@ -6,7 +6,7 @@
 #include "Server.h"
 
 int main() {
-  auto server = std::make_shared<Server>(12345);
+  auto server = std::make_shared<Server>(12340);
   server->start();
   return 0;
 }

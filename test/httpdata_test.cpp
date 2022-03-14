@@ -21,3 +21,16 @@ TEST(httpdata, parse_method) {
   test_parse_method("POST / HTTP/1.1\r", HttpMethod::METHOD_POST);
   test_parse_method(" POST / HTTP/1.1\r", HttpMethod::METHOD_UNIMPLEMENTED);
 }
+
+#define test_parse_uri(str, expected)       \
+  do {                                      \
+    http->setInBuffer(str);                 \
+    http->parse_method();                   \
+    http->parse_whitespace();               \
+    EXPECT_EQ(http->parse_URI(), expected); \
+  } while (0)
+
+TEST(httpdata, parse_URI) {
+  auto http = std::make_shared<HttpData>();
+  test_parse_uri("GET / HTTP/1.1\r", URIState::PARSE_URI_SUCCESS);
+}

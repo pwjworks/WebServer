@@ -1,4 +1,5 @@
 #include "Server.h"
+
 #include <cassert>
 #include <cstring>
 #include <fcntl.h>
@@ -9,7 +10,9 @@
 using namespace std;
 
 
-Server::Server(int port) : listenfd_(socket(AF_INET, SOCK_STREAM, 0)), epoller_(make_shared<Epoller>()) {
+Server::Server(int port) : listenfd_(socket(AF_INET, SOCK_STREAM, 0)),
+                           epoller_(make_shared<Epoller>()),
+                           http_data_(make_shared<HttpData>()) {
   assert(listenfd_ != -1);
   assert(server_fd_init(port) == true);
   assert(set_nonblock(listenfd_) == true);
@@ -71,15 +74,31 @@ bool Server::accept_new_conn() {
   return true;
 }
 
-void Server::handle_read(int index) {
+void Server::handle_read(int fd) {
   // 简单打印客户端的信息
   char *buf = new char[1024];
-  int fd = epoller_->getEvents()[index].data.fd;
   int m = recv(fd, buf, 1024, 0);
-  if (m <= 0) epoller_->epoll_del(fd);
+  if (m < 0) return;
+  if (m == 0)
+    epoller_->epoll_del(fd);
   else {
     cout << "recv from client: " << fd << "," << buf << endl;
+    http_data_->setInBuffer(string(buf));
+    http_data_->parse();
+    string buf = "HTTP/1.1 200 OK\r\nContent-type: text/plain\r\n\r\nHello World";
+    int n = send(fd, buf.c_str(), static_cast<int>(buf.size()), 0);
+    cout << n << endl;
   }
+}
+
+void Server::handle_write(int fd) {
+  //cout << "********************" << endl;
+  //cout << http_data_->getOutBuffer() << endl;
+  string buf = "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Length: 11\r\nContent-type: text/plain\r\n\r\n";
+  string buf1 = "Hello World";
+  int n = send(fd, buf.c_str(), static_cast<int>(buf.size()), 0);
+  send(fd, buf1.c_str(), static_cast<int>(buf1.size()), 0);
+  cout << n << endl;
 }
 
 
@@ -98,9 +117,12 @@ void Server::start() {
     }
     for (size_t i = 0; i < n; ++i) {
       if (epoller_->getEvents()[i].events & EPOLLIN) {
-        if (epoller_->getEvents()[i].data.fd == listenfd_ && !accept_new_conn()) cout << "accept error!";
-        else
-          handle_read(i);
+        int curr_fd = epoller_->getEvents()[i].data.fd;
+        if (curr_fd == listenfd_ && !accept_new_conn()) cout << "accept error!";
+        else {
+          handle_read(curr_fd);
+          //handle_write(curr_fd);
+        }
       }
     }
   }
