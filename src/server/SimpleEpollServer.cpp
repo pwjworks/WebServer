@@ -1,5 +1,6 @@
 #include "SimpleEpollServer.h"
 #include "util.h"
+#include <cassert>
 #include <fcntl.h>
 #include <iostream>
 #include <netinet/in.h>
@@ -10,6 +11,7 @@ using namespace std;
 SimpleEpollServer::SimpleEpollServer(int port) : Server(port),
                                                  epoller_(make_shared<Epoller>()),
                                                  http_data_(make_shared<HttpData>()) {
+  assert(set_nonblock(listenfd_) == true);
 }
 
 

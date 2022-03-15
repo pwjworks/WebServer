@@ -1,5 +1,4 @@
 #include "Server.h"
-#include "util.h"
 #include <cassert>
 #include <cstring>
 #include <fcntl.h>
@@ -12,7 +11,6 @@ using namespace std;
 
 Server::Server(int port) : listenfd_(socket(AF_INET, SOCK_STREAM, 0)) {
   assert(listenfd_ != -1);
-  assert(set_nonblock(listenfd_) == true);
   assert(server_fd_init(port) == true);
 }
 

@@ -48,8 +48,6 @@ void SimpleForkServer::start() {
 }
 
 void SimpleForkServer::handle_write(int fd) {
-  //cout << "********************" << endl;
-  //cout << http_data_->getOutBuffer() << endl;
   string buf = "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Length: 11\r\nContent-type: text/plain\r\n\r\n";
   string buf1 = "Hello World";
 }
