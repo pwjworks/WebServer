@@ -20,17 +20,6 @@ Server::~Server() {
   if (listenfd_ != -1) close(listenfd_);
 }
 
-bool Server::set_nonblock(int fd) {
-  int oldSocketFlag = fcntl(fd, F_GETFL, 0);
-  int newSocketFlag = oldSocketFlag | O_NONBLOCK;
-  if (fcntl(listenfd_, F_SETFL, newSocketFlag) == -1) {
-    close(listenfd_);
-    cout << "set listenfd to nonblock error" << endl;
-    return false;
-  }
-  return true;
-}
-
 bool Server::server_fd_init(int port) {
   // 检查port值，取正确区间范围
   if (port < 0 || port > 65535) return -1;
@@ -56,4 +45,13 @@ bool Server::server_fd_init(int port) {
   }
 
   return true;
+}
+
+int Server::accept_new_conn() {
+  struct sockaddr_in clitenaddr {};
+  socklen_t clientaddrlen = sizeof clitenaddr;
+  // 接收新连接
+  int clientfd = accept(listenfd_, (struct sockaddr *) &clitenaddr, &clientaddrlen);
+  if (clientfd < 0) return -1;
+  return clientfd;
 }

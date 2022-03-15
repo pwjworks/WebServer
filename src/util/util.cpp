@@ -1,4 +1,6 @@
 #include "util.h"
+#include <fcntl.h>
+#include <iostream>
 #include <unistd.h>
 
 using namespace std;
@@ -29,4 +31,14 @@ ssize_t writen(int fd, string &sbuff) {
   else
     sbuff = sbuff.substr(writeSum);
   return writeSum;
+}
+
+bool set_nonblock(int fd) {
+  int oldSocketFlag = fcntl(fd, F_GETFL, 0);
+  int newSocketFlag = oldSocketFlag | O_NONBLOCK;
+  if (fcntl(fd, F_SETFL, newSocketFlag) == -1) {
+    cout << "set listenfd to nonblock error" << endl;
+    return false;
+  }
+  return true;
 }

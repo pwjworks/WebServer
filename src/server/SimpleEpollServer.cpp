@@ -13,18 +13,6 @@ SimpleEpollServer::SimpleEpollServer(int port) : Server(port),
 }
 
 
-bool SimpleEpollServer::accept_new_conn() {
-  struct sockaddr_in clitenaddr {};
-  socklen_t clientaddrlen = sizeof clitenaddr;
-  // 接收新连接
-  int clientfd = accept(listenfd_, (struct sockaddr *) &clitenaddr, &clientaddrlen);
-  if (clientfd == -1) return false;
-  if (!set_nonblock(clientfd)) return false;
-  // 加入到epoller中，监听此描述符
-  epoller_->epoll_add(clientfd, EPOLLIN, 1000);
-  return true;
-}
-
 void SimpleEpollServer::handle_read(int fd) {
   // 简单打印客户端的信息
   char *buf = new char[1024];
@@ -66,8 +54,13 @@ void SimpleEpollServer::start() {
     for (size_t i = 0; i < n; ++i) {
       if (epoller_->getEvents()[i].events & EPOLLIN) {
         int curr_fd = epoller_->getEvents()[i].data.fd;
-        if (curr_fd == listenfd_ && !accept_new_conn()) cout << "accept error!";
-        else {
+
+        if (curr_fd == listenfd_) {
+          int clnt_fd = accept_new_conn();
+          epoller_->epoll_add(clnt_fd, EPOLLIN, 1000);
+          // 设置非阻塞客户端socket
+          if (!set_nonblock(clnt_fd)) close(clnt_fd);
+        } else {
           handle_read(curr_fd);
           //handle_write(curr_fd);
         }

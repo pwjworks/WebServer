@@ -13,7 +13,6 @@ public:
   explicit SimpleEpollServer(int port);
   ~SimpleEpollServer() override = default;
 
-  bool accept_new_conn() override;
   void handle_read(int fd) override;
   void handle_write(int fd) override;
   void start() override;
