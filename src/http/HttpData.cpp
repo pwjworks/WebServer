@@ -34,7 +34,6 @@ void HttpData::parse_whitespace() {
 }
 
 void HttpData::parse() {
-
   do {
     // 解析请求方法
     parse_whitespace();
@@ -53,7 +52,7 @@ void HttpData::parse() {
     uri_state_ = parse_URI();
     // 检查状态，出现错误则直接返回错误响应
     if (uri_state_ != URIState::PARSE_URI_ERROR) {
-      process_state_ = ProcessState::STATE_FINISH;
+      process_state_ = ProcessState::STATE_PARSE_VERSION;
       break;
     } else {
       process_state_ = ProcessState::STATE_ERROR;

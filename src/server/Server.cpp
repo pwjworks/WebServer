@@ -1,5 +1,5 @@
 #include "Server.h"
-
+#include "util.h"
 #include <cassert>
 #include <cstring>
 #include <fcntl.h>
@@ -83,22 +83,24 @@ void Server::handle_read(int fd) {
     epoller_->epoll_del(fd);
   else {
     cout << "recv from client: " << fd << "," << buf << endl;
-    http_data_->setInBuffer(string(buf));
-    http_data_->parse();
-    string buf = "HTTP/1.1 200 OK\r\nContent-type: text/plain\r\n\r\nHello World";
-    int n = send(fd, buf.c_str(), static_cast<int>(buf.size()), 0);
+    //    http_data_->setInBuffer(string(buf));
+    //    http_data_->parse();
+    string bufs = "HTTP/1.1 200 OK\r\nServer: myhttp\r\nConnection: close\r\nContent-type: text/html\r\n\r\n<h1>Hello World!</h1>\n";
+    ssize_t n = writen(fd, bufs);
     cout << n << endl;
+    if (n > 0) {
+      epoller_->epoll_del(fd);
+      close(fd);
+    }
   }
 }
+
 
 void Server::handle_write(int fd) {
   //cout << "********************" << endl;
   //cout << http_data_->getOutBuffer() << endl;
   string buf = "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Length: 11\r\nContent-type: text/plain\r\n\r\n";
   string buf1 = "Hello World";
-  int n = send(fd, buf.c_str(), static_cast<int>(buf.size()), 0);
-  send(fd, buf1.c_str(), static_cast<int>(buf1.size()), 0);
-  cout << n << endl;
 }
 
 
