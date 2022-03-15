@@ -3,10 +3,10 @@
 //
 
 
-#include "Server.h"
+#include "SimpleEpollServer.h"
 
 int main() {
-  auto server = std::make_shared<Server>(12340);
+  auto server = std::make_shared<SimpleEpollServer>(12340);
   server->start();
   return 0;
 }

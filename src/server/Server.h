@@ -1,16 +1,9 @@
-#include "Epoller.h"
-#include "HttpData.h"
-#include <memory>
-#include <sys/epoll.h>
-#include <vector>
-
+#pragma once
 
 class Server {
 public:
-  typedef std::shared_ptr<Epoller> EpollerPtr;
-  typedef std::shared_ptr<HttpData> HttpDataPtr;
   explicit Server(int port);
-  ~Server();
+  virtual ~Server();
 
   /**
    * 设置非阻塞socket
@@ -28,13 +21,20 @@ public:
    * 接收新连接
    * @return 是否接受成功
    */
-  bool accept_new_conn();
-  void handle_read(int fd);
-  void handle_write(int fd);
-  void start();
+  virtual bool accept_new_conn() = 0;
+  /**
+   * 处理socket读事件
+   * @param fd
+   */
+  virtual void handle_read(int fd) = 0;
+  /**
+   * 处理socket写事件
+   * @param fd
+   */
+  virtual void handle_write(int fd) = 0;
+  virtual void start() = 0;
 
-private:
-  EpollerPtr epoller_;
-  HttpDataPtr http_data_;
+
+protected:
   int listenfd_;
 };
