@@ -3,9 +3,6 @@
 
 using namespace std;
 
-HTTP_CODE HttpData::parse_request_line() {
-  //  m_url_ = strpbrk(in_buffer_, " \t");
-}
 
 LINE_STATUS HttpData::parse_line() {
   // 当前检查的字符
@@ -34,45 +31,43 @@ LINE_STATUS HttpData::parse_line() {
   return LINE_STATUS::LINE_OPEN;
 }
 
-void HttpData::parse_whitespace() {
-  //  while (read_pos_ < size_ && (in_buffer_[read_pos_] == ' ' || in_buffer_[read_pos_] == '\t' || in_buffer_[read_pos_] == '\n' || in_buffer_[read_pos_] == '\r'))
-  //    read_pos_++;
+HTTP_CODE HttpData::parse_request_line(char *text) {
+  m_url_ = strpbrk(text, " \t");
+  if (!m_url_) return HTTP_CODE::BAD_REQUEST;
+  *m_url_++ = '\0';
+  char *method = text;
+  if (strcasecmp(method, "GET") == 0) {
+    m_method = METHOD::GET;
+  } else if (strcasecmp(method, "POST") == 0) {
+    m_method = METHOD::POST;
+  } else {
+    return HTTP_CODE::BAD_REQUEST;
+  }
+
+  m_url_ += strspn(m_url_, " \t");
+  m_version_ = strpbrk(m_url_, " \t");
+  if (!m_version_) return HTTP_CODE::BAD_REQUEST;
+  *m_version_++ = '\0';
+  m_version_ += strspn(m_url_, " \t");
+  // 解析HTTP版本
+  if (strcasecmp(m_version_, "HTTP/1.1") != 0) return HTTP_CODE::BAD_REQUEST;
+  // 检查URL是否合法
+  if (strncasecmp(m_url_, "http://", 7) == 0) {
+    m_url_ += 7;
+    m_url_ = strchr(m_url_, '/');
+  }
+  if (!m_url_ || m_url_[0] != '/') return HTTP_CODE::BAD_REQUEST;
+  process_state_ = PROCESS_STATE::STATE_PARSE_HEADERS;
+  return HTTP_CODE::NO_REQUEST;
 }
 
 void HttpData::parse() {
-  //  do {
-  //    // 解析请求方法
-  //    parse_whitespace();
-  //    method_ = parse_method();
-  //    // 检查状态，出现错误则直接返回错误响应
-  //    if (method_ != HttpMethod::METHOD_UNIMPLEMENTED) {
-  //      process_state_ = ProcessState::STATE_PARSE_URI;
-  //    } else {
-  //      process_state_ = ProcessState::STATE_ERROR;
-  //      break;
-  //    }
-  //
-  //    if (process_state_ != ProcessState::STATE_PARSE_URI) break;
-  //    // 解析请求URI
-  //    parse_whitespace();
-  //    uri_state_ = parse_URI();
-  //    // 检查状态，出现错误则直接返回错误响应
-  //    if (uri_state_ != URIState::PARSE_URI_ERROR) {
-  //      process_state_ = ProcessState::STATE_PARSE_VERSION;
-  //      break;
-  //    } else {
-  //      process_state_ = ProcessState::STATE_ERROR;
-  //      break;
-  //    }
-  //
-  //    // TODO 解析headers
-  //  } while (false);
-  //  // 获得http响应
-  //  if (process_state_ == ProcessState::STATE_ERROR)
-  //    handle_error();
-  //  else if (process_state_ == ProcessState::STATE_FINISH) {
-  //    handle_reponse();
-  //  }
+  LINE_STATUS line_status = LINE_STATUS::LINE_OK;
+  HTTP_CODE res = HTTP_CODE::NO_REQUEST;
+  char *text = nullptr;
+  while (((process_state_ == PROCESS_STATE::STATE_FINISH) && (line_status == LINE_STATUS::LINE_OK)) || ((line_status = parse_line()) == LINE_STATUS::LINE_OK)) {
+    text = get_line();
+  }
 }
 
 void HttpData::reset() {
