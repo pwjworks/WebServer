@@ -31,14 +31,12 @@ bool Server::server_fd_init(int port) {
   // 绑定端口
   if (bind(listenfd_, (struct sockaddr *) &bindaddr, sizeof(bindaddr)) == -1) {
     cout << "bind listen socket error." << endl;
-    close(listenfd_);
     return false;
   }
 
   // 监听端口
   if (listen(listenfd_, SOMAXCONN) == -1) {
     cout << "listen error." << endl;
-    close(listenfd_);
     return false;
   }
 

@@ -1,6 +1,18 @@
 #pragma once
 #include <string>
 
+enum class HTTP_CODE {
+  NO_REQUEST,
+  GET_REQUEST,
+  BAD_REQUEST,
+  NO_RESOURCE,
+  FORBIDDEN_REQUEST,
+  FILE_REQUEST,
+  INTERNAL_ERROR,
+  CLOSED_CONNECTION
+};
+
+
 enum class ProcessState {
   STATE_PARSE_METHOD = 1,
   STATE_PARSE_URI,
@@ -13,32 +25,29 @@ enum class ProcessState {
   STATE_FINISH
 };
 
-enum class URIState {
-  PARSE_URI_ERROR = 1,
-  PARSE_URI_SUCCESS,
-};
-
-enum HttpMethod {
-  METHOD_POST = 1,
-  METHOD_GET,
-  METHOD_UNIMPLEMENTED
+enum class LINE_STATUS {
+  LINE_OK = 0,
+  LINE_BAD,
+  LINE_OPEN
 };
 
 class HttpData {
 public:
+  static const int INPUT_BUFFER_SIZE = 2048;
+  static const int OUTPUT_BUFFER_SIZE = 1024;
   HttpData() = default;
   ~HttpData() = default;
 
   /**
-   * 解析请求URI
-   * @return Http请求URI的解析状态
+   * 提取http请求一行数据
+   * @return 提取状态
    */
-  URIState parse_URI();
+  LINE_STATUS parse_line();
   /**
-   * 解析http请求行的请求方法。
+   * 解析http请求行的请求行。
    * @return Http请求方法的解析状态
    */
-  HttpMethod parse_method();
+  HTTP_CODE parse_request_line();
   /**
    * 去除请求的空格
    */
@@ -48,27 +57,27 @@ public:
    */
   void parse();
 
-  void handle_reponse();
-  void handle_error();
+  //  void handle_reponse();
+  //  void handle_error();
   /**
    * 重置成员变量至初始状态
    */
   void reset();
 
-public:
-  void setInBuffer(const std::string &inBuffer);
-  const std::string &getOutBuffer() const;
+  void setMInput(char *mInput);
 
 private:
-  std::string in_buffer_;
-  std::string out_buffer_;
-
+  char *m_input_;
+  char *m_output_;
+  char *m_url_;
 
 private:
-  int read_pos_{0};
-  size_t size_{0};
+  // 表示读缓冲中已经读入的客户数据最后一个字节的下一个位置
+  int m_read_idx;
+  // 当前正在分析的字符在读缓冲区中的位置
+  int m_checked_idx;
+  // 正在解析的行的起始位置
+  int m_start_line;
 
-  URIState uri_state_{URIState::PARSE_URI_ERROR};
-  HttpMethod method_{HttpMethod::METHOD_UNIMPLEMENTED};
   ProcessState process_state_{ProcessState::STATE_PARSE_METHOD};
 };

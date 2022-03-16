@@ -1,36 +1,17 @@
 #include "HttpData.h"
 #include <gtest/gtest.h>
-#include <memory>
 
-TEST(httpdata, parse_basic) {
-  auto http = std::make_shared<HttpData>();
-  http->setInBuffer("GET / HTTP/1.1\r");
-  http->parse();
-}
-
-#define test_parse_method(str, expected)       \
+#define test_parse_request_line(str, expected) \
   do {                                         \
-    http->setInBuffer(str);                    \
-    EXPECT_EQ(http->parse_method(), expected); \
+    http->setMInput(str);                      \
+    EXPECT_EQ(http->parse_line(), expected);   \
   } while (0)
 
-TEST(httpdata, parse_method) {
+TEST(httpdata, parse_request_line) {
   auto http = std::make_shared<HttpData>();
-  test_parse_method("GET / HTTP/1.1\r", HttpMethod::METHOD_GET);
-  test_parse_method("OOO / HTTP/1.1\r", HttpMethod::METHOD_UNIMPLEMENTED);
-  test_parse_method("POST / HTTP/1.1\r", HttpMethod::METHOD_POST);
-  test_parse_method(" POST / HTTP/1.1\r", HttpMethod::METHOD_UNIMPLEMENTED);
-}
-
-#define test_parse_uri(str, expected)       \
-  do {                                      \
-    http->setInBuffer(str);                 \
-    http->parse_method();                   \
-    http->parse_whitespace();               \
-    EXPECT_EQ(http->parse_URI(), expected); \
-  } while (0)
-
-TEST(httpdata, parse_URI) {
-  auto http = std::make_shared<HttpData>();
-  test_parse_uri("GET / HTTP/1.1\r", URIState::PARSE_URI_SUCCESS);
+  test_parse_request_line("GET / HTTP/1.1\r\n", LINE_STATUS::LINE_OK);
+  test_parse_request_line("GET / HTTP/1.1\r", LINE_STATUS::LINE_OPEN);
+  test_parse_request_line("GET / HTTP/1.1\r\\", LINE_STATUS::LINE_BAD);
+  test_parse_request_line("GET / HTTP/1.1\\\n", LINE_STATUS::LINE_BAD);
+  test_parse_request_line("GET / HTTP/1.1", LINE_STATUS::LINE_OPEN);
 }
