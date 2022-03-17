@@ -73,6 +73,8 @@ HEADER_STAUS HttpData::parse_headers(char *text) {
   if (text[0] == '\0') {
     if (m_content_length != 0) {
       process_state_ = PROCESS_STATE::STATE_PARSE_CONTENT;
+    } else {
+      process_state_ = PROCESS_STATE::STATE_FINISH;
     }
     return HEADER_STAUS::HEADER_OK;
   }
@@ -96,12 +98,15 @@ HEADER_STAUS HttpData::parse_headers(char *text) {
   return ret;
 }
 
+HTTP_CODE HttpData::do_request() {
+  return HTTP_CODE::GET_REQUEST;
+}
 
 HTTP_CODE HttpData::parse() {
-  LINE_STATUS line_status = LINE_STATUS::LINE_OK;
-  HTTP_CODE ret = HTTP_CODE::NO_REQUEST;
-  char *text = nullptr;
-  while (((process_state_ != PROCESS_STATE::STATE_FINISH) && (line_status == LINE_STATUS::LINE_OK)) || ((line_status = parse_line()) == LINE_STATUS::LINE_OK)) {
+  LINE_STATUS line_status;
+  HTTP_CODE ret;
+  char *text;
+  while (process_state_ == PROCESS_STATE::STATE_FINISH || process_state_ == PROCESS_STATE::STATE_PARSE_HEADERS && (line_status = parse_line()) == LINE_STATUS::LINE_OK || (line_status = parse_line()) == LINE_STATUS::LINE_OK) {
     text = get_line();
     m_start_line = m_checked_idx;
     switch (process_state_) {
@@ -120,9 +125,10 @@ HTTP_CODE HttpData::parse() {
       case PROCESS_STATE::STATE_PARSE_CONTENT:
         break;
       case PROCESS_STATE::STATE_FINISH:
-        break;
+        return do_request();
     }
   }
+  return HTTP_CODE::BAD_REQUEST;
 }
 
 
@@ -130,21 +136,21 @@ void HttpData::reset() {
   m_checked_idx = 0;
   m_read_idx = 0;
   m_start_line = 0;
+  process_state_ = PROCESS_STATE::STATE_PARSE_REQUESTLINE;
+  headers_.clear();
   m_input_ = new char[INPUT_BUFFER_SIZE];
   m_output_ = new char[OUTPUT_BUFFER_SIZE];
   memset(m_input_, '\0', INPUT_BUFFER_SIZE);
   memset(m_output_, '\0', OUTPUT_BUFFER_SIZE);
 }
 
-void HttpData::setMInput(char *mInput) {
-  reset();
-  m_input_ = mInput;
-  m_read_idx = strlen(m_input_);
+HTTP_CODE HttpData::parse_content(char *text) {
+  process_state_ = PROCESS_STATE::STATE_FINISH;
+  return HTTP_CODE::NO_REQUEST;
 }
 
-HTTP_CODE HttpData::do_request() {
-  return HTTP_CODE::NO_REQUEST;
-}
-HTTP_CODE HttpData::parse_content(char *text) {
-  return HTTP_CODE::NO_REQUEST;
+void HttpData::setMInput(char *mInput) {
+  reset();
+  m_read_idx = strlen(mInput);
+  memcpy(m_input_, mInput, m_read_idx);
 }
