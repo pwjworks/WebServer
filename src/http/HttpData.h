@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 #include <string>
 
 /**
@@ -21,6 +22,7 @@ enum class HTTP_CODE {
 enum class PROCESS_STATE {
   STATE_PARSE_REQUESTLINE = 1,
   STATE_PARSE_HEADERS,
+  STATE_PARSE_CONTENT,
   STATE_FINISH
 };
 
@@ -48,6 +50,7 @@ enum class LINE_STATUS {
   LINE_OPEN   // 行数据尚且不完整
 };
 
+
 class HttpData {
 public:
   static const int INPUT_BUFFER_SIZE = 2048;
@@ -65,13 +68,15 @@ public:
    * @return Http请求方法的解析状态
    */
   HTTP_CODE parse_request_line(char *text);
-
+  HTTP_CODE parse_headers(char *text);
+  HTTP_CODE parse_content(char *text);
   /**
-   * 解析主方法
+   *
+   * @return
    */
-  void parse();
+  HTTP_CODE parse();
 
-  //  void handle_reponse();
+  HTTP_CODE do_request();
   //  void handle_error();
   /**
    * 重置成员变量至初始状态
@@ -88,7 +93,10 @@ public:
 private:
   char *m_input_;
   char *m_output_;
+  // HTTP请求URL
   char *m_url_;
+  // HTTP请求版本
+  char *m_version_;
 
 private:
   // 表示读缓冲中已经读入的客户数据最后一个字节的下一个位置
@@ -97,11 +105,13 @@ private:
   int m_checked_idx;
   // 正在解析的行的起始位置
   int m_start_line;
-
-
-  char *m_version_;
+  // HTTP请求的消息体长度
+  int m_content_length;
+  std::map<char *, char *> headers_;
   // 请求方法
   METHOD m_method;
+
+private:
   // 主状态机当前所处的状态
   PROCESS_STATE process_state_{PROCESS_STATE::STATE_PARSE_REQUESTLINE};
 };

@@ -11,8 +11,8 @@ target_link_libraries(
 
 target_link_libraries(
         httpdata_test
-        gtest_main
         webserver
+        gtest_main
 )
 
 include(GoogleTest)
