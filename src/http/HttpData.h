@@ -50,6 +50,13 @@ enum class LINE_STATUS {
   LINE_OPEN   // 行数据尚且不完整
 };
 
+/**
+ * 从状态机，header的读取状态
+ */
+enum class HEADER_STAUS {
+  HEADER_OK = 0,// 读取到一个header
+  HEADER_BAD    // header出错
+};
 
 class HttpData {
 public:
@@ -68,7 +75,7 @@ public:
    * @return Http请求方法的解析状态
    */
   HTTP_CODE parse_request_line(char *text);
-  HTTP_CODE parse_headers(char *text);
+  HEADER_STAUS parse_headers(char *text);
   HTTP_CODE parse_content(char *text);
   /**
    *

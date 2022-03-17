@@ -67,30 +67,33 @@ HTTP_CODE HttpData::parse_request_line(char *text) {
   return HTTP_CODE::NO_REQUEST;
 }
 
-HTTP_CODE HttpData::parse_headers(char *text) {
+HEADER_STAUS HttpData::parse_headers(char *text) {
+  HEADER_STAUS ret = HEADER_STAUS::HEADER_BAD;
   // 遇到空行，表示头部字段解析完毕
   if (text[0] == '\0') {
     if (m_content_length != 0) {
       process_state_ = PROCESS_STATE::STATE_PARSE_CONTENT;
-      return HTTP_CODE::NO_REQUEST;
     }
-    return HTTP_CODE::GET_REQUEST;
+    return HEADER_STAUS::HEADER_OK;
   }
-  char *key_ = text;
-  char *value_ = nullptr;
+  do {
+    char *key_ = text;
+    char *value_ = nullptr;
 
-  // 不存在冒号则为错误请求
-  value_ = strpbrk(key_, " : ");
-  // 无value则返回错误请求
-  if (!value_) return HTTP_CODE::BAD_REQUEST;
-  *value_++ = '\0';
-  value_ += strspn(value_, " : ");
-  if (strlen(value_) == 0) {
-    return HTTP_CODE::BAD_REQUEST;
-  } else {
-    headers_[key_] = value_;
-  }
-  return HTTP_CODE::NO_REQUEST;
+    // 不存在冒号则为错误请求
+    value_ = strpbrk(key_, " : ");
+    // 无value则返回错误请求
+    if (!value_) break;
+    *value_++ = '\0';
+    value_ += strspn(value_, " : ");
+    if (strlen(value_) == 0) {
+      break;
+    } else {
+      headers_[key_] = value_;
+      ret = HEADER_STAUS::HEADER_OK;
+    }
+  } while (false);
+  return ret;
 }
 
 
@@ -110,10 +113,8 @@ HTTP_CODE HttpData::parse() {
         break;
       }
       case PROCESS_STATE::STATE_PARSE_HEADERS: {
-        ret = parse_headers(text);
-        if (ret == HTTP_CODE::BAD_REQUEST) return HTTP_CODE::BAD_REQUEST;
-        else if (ret == HTTP_CODE::GET_REQUEST)
-          return do_request();
+        HEADER_STAUS header_status = parse_headers(text);
+        if (header_status == HEADER_STAUS::HEADER_BAD) return HTTP_CODE::BAD_REQUEST;
         break;
       }
       case PROCESS_STATE::STATE_PARSE_CONTENT:

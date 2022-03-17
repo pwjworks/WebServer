@@ -41,9 +41,9 @@ TEST(httpdata, parse_request_line) {
 
 TEST(httpdata, parse_headers) {
   auto http = std::make_shared<HttpData>();
-  test_parse_headers("\0", HTTP_CODE::GET_REQUEST);
-  test_parse_headers("Connection : keep-alive", HTTP_CODE::NO_REQUEST);
-  test_parse_headers("Connection: keep-alive", HTTP_CODE::NO_REQUEST);
-  test_parse_headers("Connection:keep-alive", HTTP_CODE::NO_REQUEST);
-  test_parse_headers("Connection:", HTTP_CODE::BAD_REQUEST);
+  test_parse_headers("\0", HEADER_STAUS::HEADER_OK);
+  test_parse_headers("Connection : keep-alive", HEADER_STAUS::HEADER_OK);
+  test_parse_headers("Connection: keep-alive", HEADER_STAUS::HEADER_OK);
+  test_parse_headers("Connection:keep-alive", HEADER_STAUS::HEADER_OK);
+  test_parse_headers("Connection:", HEADER_STAUS::HEADER_BAD);
 }
