@@ -3,6 +3,9 @@
 
 using namespace std;
 
+HttpData::HttpData() {
+  reset();
+}
 
 LINE_STATUS HttpData::parse_line() {
   // 当前检查的字符
@@ -153,4 +156,8 @@ void HttpData::setMInput(char *mInput) {
   reset();
   m_read_idx = strlen(mInput);
   memcpy(m_input_, mInput, m_read_idx);
+}
+
+char *HttpData::getMOutput() const {
+  return m_output_;
 }

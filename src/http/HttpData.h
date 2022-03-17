@@ -62,7 +62,7 @@ class HttpData {
 public:
   static const int INPUT_BUFFER_SIZE = 2048;
   static const int OUTPUT_BUFFER_SIZE = 1024;
-  HttpData() = default;
+  HttpData();
   ~HttpData() = default;
 
   /**
@@ -100,6 +100,9 @@ public:
 private:
   char *m_input_;
   char *m_output_;
+  char *getMOutput() const;
+
+private:
   // HTTP请求URL
   char *m_url_;
   // HTTP请求版本
@@ -117,8 +120,6 @@ private:
   std::map<char *, char *> headers_;
   // 请求方法
   METHOD m_method;
-
-private:
   // 主状态机当前所处的状态
-  PROCESS_STATE process_state_{PROCESS_STATE::STATE_PARSE_REQUESTLINE};
+  PROCESS_STATE process_state_;
 };
