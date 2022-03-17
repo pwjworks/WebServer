@@ -18,8 +18,8 @@ void SimpleForkServer::handle_read(int fd) {
   //    http_data_->setInBuffer(string(buf));
   //    http_data_->parse();
   string bufs = "HTTP/1.1 200 OK\r\nServer: myhttp\r\nConnection: close\r\nContent-type: text/html\r\n\r\n<h1>Hello World!</h1>\n";
-  ssize_t n1 = writen(fd, bufs);
-  cout << n1 << endl;
+  //ssize_t n1 = writen(fd, bufs);
+  //cout << n1 << endl;
 }
 
 

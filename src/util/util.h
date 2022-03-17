@@ -1,7 +1,7 @@
 #include <string>
 
 
-ssize_t writen(int fd, std::string &sbuff);
+ssize_t writen(int fd, void *buff, size_t n);
 /**
    * 设置非阻塞socket
    * @param fd 需要设置为非阻塞的socket

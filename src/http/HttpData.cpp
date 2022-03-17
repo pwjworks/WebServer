@@ -102,6 +102,7 @@ HEADER_STAUS HttpData::parse_headers(char *text) {
 }
 
 HTTP_CODE HttpData::do_request() {
+  m_output_ = "HTTP/1.1 200 OK\r\nServer: myhttp\r\nConnection: close\r\nContent-type: text/html\r\n\r\n<h1>Hello World!</h1>\n";
   return HTTP_CODE::GET_REQUEST;
 }
 
@@ -156,8 +157,12 @@ void HttpData::setMInput(char *mInput) {
   reset();
   m_read_idx = strlen(mInput);
   memcpy(m_input_, mInput, m_read_idx);
+  parse();
 }
 
-char *HttpData::getMOutput() const {
+char *HttpData::get_m_output() const {
   return m_output_;
+}
+int HttpData::get_output_len() {
+  return strlen(m_output_);
 }

@@ -17,8 +17,6 @@ void Epoller::epoll_add(const int &fd, __uint32_t fd_events_, int timeout) {
   event.events = fd_events_;
   if (epoll_ctl(epollfd_, EPOLL_CTL_ADD, fd, &event) < 0) {
     std::cout << "epoll add error!" << std::endl;
-  } else {
-    std::cout << "epoll add success!" << std::endl;
   }
 }
 void Epoller::epoll_mod(const int &fd, __uint32_t fd_events_, int timeout) {

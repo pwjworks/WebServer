@@ -96,11 +96,16 @@ public:
   char *get_line() { return m_input_ + m_start_line; };
 
   void setMInput(char *mInput);
+  char *get_m_output() const;
+  int get_output_len();
+
 
 private:
+  // 输入字符串
   char *m_input_;
+  // 输出字符串
   char *m_output_;
-  char *getMOutput() const;
+
 
 private:
   // HTTP请求URL

@@ -23,12 +23,10 @@ void SimpleEpollServer::handle_read(int fd) {
   if (m == 0)
     epoller_->epoll_del(fd);
   else {
-    cout << "recv from client: " << fd << "," << buf << endl;
-    //    http_data_->setInBuffer(string(buf));
-    //    http_data_->parse();
-    string bufs = "HTTP/1.1 200 OK\r\nServer: myhttp\r\nConnection: close\r\nContent-type: text/html\r\n\r\n<h1>Hello World!</h1>\n";
-    ssize_t n = writen(fd, bufs);
-    cout << n << endl;
+    //cout << "recv from client: " << fd << "," << buf << endl;
+    http_data_->setMInput(buf);
+    ssize_t n = writen(fd, http_data_->get_m_output(), http_data_->get_output_len());
+    //cout << n << endl;
     if (n > 0) {
       epoller_->epoll_del(fd);
       close(fd);
@@ -44,7 +42,7 @@ void SimpleEpollServer::start() {
   cout << "Running..." << endl;
 
   while (true) {
-    cout << "Running..." << endl;
+    //cout << "Running..." << endl;
     int n = epoller_->poll();
     if (n < 0) {
       if (errno == EINTR)
@@ -74,6 +72,6 @@ void SimpleEpollServer::start() {
 void SimpleEpollServer::handle_write(int fd) {
   //cout << "********************" << endl;
   //cout << http_data_->getOutBuffer() << endl;
-  string buf = "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Length: 11\r\nContent-type: text/plain\r\n\r\n";
-  string buf1 = "Hello World";
+  //string buf = "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Length: 11\r\nContent-type: text/plain\r\n\r\n";
+  //string buf1 = "Hello World";
 }
