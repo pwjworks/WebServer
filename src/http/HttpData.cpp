@@ -4,6 +4,8 @@
 using namespace std;
 
 HttpData::HttpData() {
+  m_input_ = new char[INPUT_BUFFER_SIZE];
+  m_output_ = new char[OUTPUT_BUFFER_SIZE];
   reset();
 }
 
@@ -142,10 +144,6 @@ void HttpData::reset() {
   m_start_line = 0;
   process_state_ = PROCESS_STATE::STATE_PARSE_REQUESTLINE;
   headers_.clear();
-  m_input_ = new char[INPUT_BUFFER_SIZE];
-  m_output_ = new char[OUTPUT_BUFFER_SIZE];
-  memset(m_input_, '\0', INPUT_BUFFER_SIZE);
-  memset(m_output_, '\0', OUTPUT_BUFFER_SIZE);
 }
 
 HTTP_CODE HttpData::parse_content(char *text) {
@@ -155,12 +153,14 @@ HTTP_CODE HttpData::parse_content(char *text) {
 
 void HttpData::setMInput(char *mInput) {
   reset();
+  memset(m_input_, '\0', INPUT_BUFFER_SIZE);
   m_read_idx = strlen(mInput);
   memcpy(m_input_, mInput, m_read_idx);
   parse();
 }
 
-char *HttpData::get_m_output() const {
+char *HttpData::get_m_output() {
+  reset();
   return m_output_;
 }
 int HttpData::get_output_len() {

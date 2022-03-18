@@ -96,7 +96,7 @@ public:
   char *get_line() { return m_input_ + m_start_line; };
 
   void setMInput(char *mInput);
-  char *get_m_output() const;
+  char *get_m_output();
   int get_output_len();
 
 
