@@ -9,8 +9,6 @@ HttpData::HttpData() {
   reset();
 }
 HttpData::~HttpData() {
-  delete m_input_;
-  delete m_output_;
 }
 
 
