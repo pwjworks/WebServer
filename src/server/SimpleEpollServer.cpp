@@ -25,6 +25,7 @@ void SimpleEpollServer::handle_read(int fd) {
   else {
     //cout << "recv from client: " << fd << "," << buf << endl;
     http_data_->setMInput(buf);
+    http_data_->parse();
     ssize_t n = writen(fd, http_data_->get_m_output(), http_data_->get_output_len());
     //cout << n << endl;
     if (n > 0) {

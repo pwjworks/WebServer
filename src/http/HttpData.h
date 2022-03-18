@@ -63,7 +63,7 @@ public:
   static const int INPUT_BUFFER_SIZE = 2048;
   static const int OUTPUT_BUFFER_SIZE = 1024;
   HttpData();
-  ~HttpData() = default;
+  ~HttpData();
 
   /**
    * 解析http请求一行数据

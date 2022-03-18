@@ -8,6 +8,11 @@ HttpData::HttpData() {
   m_output_ = new char[OUTPUT_BUFFER_SIZE];
   reset();
 }
+HttpData::~HttpData() {
+  delete m_input_;
+  delete m_output_;
+}
+
 
 LINE_STATUS HttpData::parse_line() {
   // 当前检查的字符
@@ -156,7 +161,6 @@ void HttpData::setMInput(char *mInput) {
   memset(m_input_, '\0', INPUT_BUFFER_SIZE);
   m_read_idx = strlen(mInput);
   memcpy(m_input_, mInput, m_read_idx);
-  parse();
 }
 
 char *HttpData::get_m_output() {
