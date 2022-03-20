@@ -1,7 +1,11 @@
 #pragma once
 
+#include <HttpData.h>
+#include <memory>
+
 class Server {
 public:
+  typedef std::shared_ptr<HttpData> HttpDataPtr;
   explicit Server(int port);
   virtual ~Server();
 
@@ -18,13 +22,15 @@ public:
    */
   int accept_new_conn();
   /**
-   * 处理socket读事件
+   * 处理socket事件
    * @param fd
    */
-  virtual void handle_read(int fd) = 0;
+  virtual void handle_events(int fd) = 0;
   virtual void start() = 0;
 
 
 protected:
+  __uint32_t revents;
+  std::shared_ptr<HttpData> http_data_;
   int listenfd_;
 };

@@ -3,25 +3,13 @@
 #include <cassert>
 #include <fcntl.h>
 #include <iostream>
-#include <netinet/in.h>
 #include <unistd.h>
 
 using namespace std;
 
 SimpleEpollServer::SimpleEpollServer(int port) : Server(port),
-                                                 epoller_(make_shared<Epoller>()),
-                                                 http_data_(make_shared<HttpData>()),
-                                                 channel_ptr_(make_shared<Channel>()) {
+                                                 epoller_(make_shared<Epoller>()) {
   assert(set_nonblock(listenfd_) == true);
-}
-
-
-void SimpleEpollServer::handle_read(int fd) {
-  http_data_->set_fd_(fd);
-  auto cp = http_data_->get_channel();
-  cp->set_revents(revents);
-  cp->setFd(fd);
-  cp->handle_event();
 }
 
 
@@ -51,10 +39,16 @@ void SimpleEpollServer::start() {
           // 设置非阻塞客户端socket
           if (!set_nonblock(clnt_fd)) close(clnt_fd);
         } else {
-          handle_read(curr_fd);
-          //handle_write(curr_fd);
+          handle_events(curr_fd);
         }
       }
     }
   }
+}
+void SimpleEpollServer::handle_events(int fd) {
+  http_data_->set_fd_(fd);
+  auto cp = http_data_->get_channel();
+  cp->set_revents(revents);
+  cp->setFd(fd);
+  cp->handle_event();
 }

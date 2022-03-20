@@ -6,13 +6,8 @@
 
 class SimpleForkServer : public Server {
 public:
-  typedef std::shared_ptr<HttpData> HttpDataPtr;
   explicit SimpleForkServer(int port);
-
-  void handle_read(int fd) override;
-  void handle_write(int fd) override;
+  ~SimpleForkServer() override = default;
+  void handle_events(int fd) override;
   void start() override;
-
-private:
-  HttpDataPtr http_data_;
 };

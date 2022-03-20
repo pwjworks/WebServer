@@ -271,7 +271,6 @@ void HttpData::m_memcpy(char *text) {
 }
 
 void HttpData::setMInput(char *mInput) {
-  memset(m_input_, '\0', m_content_length);
   reset();
   m_content_length = strlen(mInput);
   memcpy(m_input_, mInput, m_content_length);

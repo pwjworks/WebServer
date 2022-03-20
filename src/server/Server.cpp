@@ -1,4 +1,5 @@
 #include "Server.h"
+#include <HttpData.h>
 #include <cassert>
 #include <cstring>
 #include <fcntl.h>
@@ -9,7 +10,7 @@
 using namespace std;
 
 
-Server::Server(int port) : listenfd_(socket(AF_INET, SOCK_STREAM, 0)) {
+Server::Server(int port) : listenfd_(socket(AF_INET, SOCK_STREAM, 0)), http_data_(make_shared<HttpData>()) {
   assert(listenfd_ != -1);
   assert(server_fd_init(port) == true);
 }
@@ -49,6 +50,6 @@ int Server::accept_new_conn() {
   // 接收新连接
   int clientfd = accept(listenfd_, (struct sockaddr *) &clitenaddr, &clientaddrlen);
   if (clientfd < 0) return -1;
-  
+
   return clientfd;
 }

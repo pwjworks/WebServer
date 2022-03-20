@@ -7,23 +7,8 @@
 
 using namespace std;
 
-SimpleForkServer::SimpleForkServer(int port) : Server(port),
-                                               http_data_(make_shared<HttpData>()) {
+SimpleForkServer::SimpleForkServer(int port) : Server(port) {
 }
-
-void SimpleForkServer::handle_read(int fd) {
-  // 简单打印客户端的信息
-  char *buf = new char[1024];
-  int m = recv(fd, buf, 1024, 0);
-  if (m > 0) {
-    //cout << "recv from client: " << fd << "," << buf << endl;
-    //    http_data_->setMInput(buf);
-    //    http_data_->parse();
-    //    ssize_t n = writen(fd, http_data_->get_m_output(), http_data_->get_output_len());
-    //cout << n << endl;
-  }
-}
-
 
 void SimpleForkServer::start() {
   cout << "Running..." << endl;
@@ -36,7 +21,7 @@ void SimpleForkServer::start() {
       continue;
     }
     if (pid == 0) {
-      handle_read(clint_fd);
+      handle_events(clint_fd);
       close(clint_fd);
       // 处理完毕后立即退出进程
       break;
@@ -45,11 +30,12 @@ void SimpleForkServer::start() {
       waitpid(-1, &stat, WNOHANG);
       close(clint_fd);
     }
-    //cout << "running..." << endl;
   }
 }
-
-void SimpleForkServer::handle_write(int fd) {
-  //  string buf = "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Length: 11\r\nContent-type: text/plain\r\n\r\n";
-  //  string buf1 = "Hello World";
+void SimpleForkServer::handle_events(int fd) {
+  cout << fd << endl;
+  http_data_->set_fd_(fd);
+  http_data_->handle_read();
+  http_data_->handle_write();
+  http_data_->handle_conn();
 }
