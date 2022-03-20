@@ -94,10 +94,25 @@ public:
    * @return http响应
    */
   void parse();
+  /**
+   * 分析请求头并构建HTTP响应。
+   */
   void analysis_request();
+  /**
+   * 读取请求内容，如果成功读取，则解析http报文，并构建HTTP响应。
+   */
   void handle_read();
+  /**
+   * 将输出缓冲区的内容发送出去。
+   */
   void handle_write();
+  /**
+   * 处理连接并重置成员变量，如果是长连接则保持连接。
+   */
   void handle_conn();
+  /**
+   * 根据响应的HTTP代码构建错误响应报文。
+   */
   void handle_error();
   /**
    * 重置成员变量至初始状态
@@ -108,12 +123,23 @@ public:
    * @return
    */
   char *get_line() { return m_input_ + m_start_line; };
-  void m_memcpy(char *text, int n);
-  void m_memcpy(char *text);
+
+
   ChannelPtr get_channel() { return channel_; }
   void set_fd_(int fd) { fd_ = fd; }
-  HTTP_CODE getHttpCode() const;
   void setMInput(char *mInput);
+
+  /**
+   * 将响应内容复制到输出缓冲区。
+   * @param text 响应内容
+   * @param n 响应内容长度
+   */
+  void m_memcpy(char *text, int n);
+  /**
+   * 将响应内容复制到输出缓冲区，自动检测内容长度。
+   * @param text 响应内容
+   */
+  void m_memcpy(char *text);
 
 private:
   // channel指针
@@ -126,12 +152,8 @@ private:
   char *m_url_;
   // HTTP请求版本
   char *m_version_;
-  CONNNECTION_STATUS connection_state_;
-  // 请求方法
-  METHOD m_method;
-  // 主状态机当前所处的状态
-  PROCESS_STATE process_state_;
 
+  // 监听的socket
   int fd_;
   // 当前正在分析的字符在读缓冲区中的位置
   int m_checked_idx;
@@ -139,9 +161,18 @@ private:
   int m_start_line;
   // HTTP请求的消息体长度
   int m_content_length;
+  // 输出缓冲区的已写长度
   int m_write_idx;
+  // 是否为长连接
   bool keepAlive_;
+
   std::map<char *, char *, cmp_str> headers_;
+  CONNNECTION_STATUS connection_state_;
+  // 请求方法
+  METHOD m_method;
+  // 主状态机当前所处的状态
+  PROCESS_STATE process_state_;
+  // HTTP响应代码
   HTTP_CODE http_code_;
 
 

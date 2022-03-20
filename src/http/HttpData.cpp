@@ -1,14 +1,20 @@
 #include "HttpData.h"
 #include "Util.h"
 #include <cstring>
+#include <sys/epoll.h>
 #include <unistd.h>
 
 using namespace std;
 
-HttpData::HttpData() {
+HttpData::HttpData() : channel_(make_shared<Channel>()) {
+  channel_->set_read_callback([this] { handle_read(); });
+  channel_->set_write_callback([this] { handle_write(); });
+  channel_->set_conn_callback([this] { handle_conn(); });
+  channel_->set_error_callback([this] { handle_error(); });
   m_input_ = new char[INPUT_BUFFER_SIZE];
   m_output_ = new char[OUTPUT_BUFFER_SIZE];
   reset();
+  fd_ = channel_->get_fd();
 }
 HttpData::~HttpData() {
 }
@@ -146,11 +152,11 @@ void HttpData::parse() {
         break;
       }
       case PROCESS_STATE::STATE_WRITE: {
-        handle_write();
+        channel_->set_revents(EPOLLOUT);
+        process_state_ = PROCESS_STATE::STATE_FINISH;
         break;
       }
       case PROCESS_STATE::STATE_FINISH: {
-
         break;
       }
     }
@@ -159,18 +165,26 @@ void HttpData::parse() {
 
 
 void HttpData::reset() {
+  m_url_ = nullptr;
+  m_version_ = nullptr;
+  fd_ = 0;
+  m_write_idx = 0;
   m_checked_idx = 0;
   m_content_length = 0;
   m_start_line = 0;
   keepAlive_ = false;
+  headers_.clear();
+  connection_state_ = CONNNECTION_STATUS::H_CONNECTED;
+  m_method = METHOD::GET;
   process_state_ = PROCESS_STATE::STATE_PARSE_REQUESTLINE;
   http_code_ = HTTP_CODE::BAD_REQUEST;
-  headers_.clear();
+  memset(m_input_, '\0', INPUT_BUFFER_SIZE);
+  memset(m_output_, '\0', OUTPUT_BUFFER_SIZE);
 }
 
 void HttpData::parse_content(char *text) {
   printf("content\n");
-  strcat(m_output_, text);
+  m_memcpy(text);
   // 主状态机状态迁移
   process_state_ = PROCESS_STATE::STATE_WRITE;
 }
@@ -182,7 +196,6 @@ void HttpData::handle_read() {
     bool zero = false;
     int read_num = readn(fd_, m_input_, INPUT_BUFFER_SIZE, zero);
     if (connection_state_ == CONNNECTION_STATUS::H_DISCONNECTING) {
-      memset(m_input_, '\0', INPUT_BUFFER_SIZE);
       break;
     }
     if (read_num < 0) {
@@ -194,6 +207,11 @@ void HttpData::handle_read() {
     }
     m_content_length = read_num;
   } while (false);
+  if (m_content_length > 0) {
+    parse();
+  } else {
+    handle_error();
+  }
 }
 
 void HttpData::analysis_request() {
@@ -203,51 +221,55 @@ void HttpData::analysis_request() {
     // 字符串拼接
     m_memcpy("Connection: keep-alive\r\nKeep-Alive: timeout=300000\r\n", 52);
   }
-  m_memcpy("Content-Type: text/html; charset=utf-8\r\n\r\n<h1>Hello world!</h1>", 63);
+  m_memcpy("Content-Type: text/html; charset=utf-8\r\n\r\n<h1>Hello world!</h1><h3>Your headers:</h3>", 85);
+  for (auto &kv : headers_) {
+    m_memcpy("<div>");
+    m_memcpy(kv.first);
+    m_memcpy(":");
+    m_memcpy(kv.second);
+    m_memcpy("</div>");
+  }
 }
 
 void HttpData::handle_write() {
-  //  printf("write!");
-
-  if (connection_state_ != H_DISCONNECTED) {
-    __uint32_t &events_ = channel_->get_events();
-    int n = writen(fd_, m_output_, m_write_idx);
-    printf("%d\n", n);
-    if (n < 0) {
-      events_ = 0;
-    }
-    //if (strlen(m_output_) > 0) events_ |= EPOLLOUT;
-  }
-  handle_conn();
-  process_state_ = PROCESS_STATE::STATE_FINISH;
+  int n = writen(fd_, m_output_, m_write_idx);
 }
 
 void HttpData::handle_conn() {
-  memset(m_input_, '\0', INPUT_BUFFER_SIZE);
-  memset(m_output_, '\0', OUTPUT_BUFFER_SIZE);
-  reset();
-  m_write_idx = 0;
-
-  //  if (!keepAlive_)
   close(fd_);
-}
-void HttpData::handle_error() {
+  reset();
 }
 
-HTTP_CODE HttpData::getHttpCode() const {
-  return http_code_;
+void HttpData::handle_error() {
+  switch (http_code_) {
+    case HTTP_CODE::GET_REQUEST:
+      break;
+    case HTTP_CODE::BAD_REQUEST:
+      break;
+    case HTTP_CODE::NO_RESOURCE:
+      break;
+    case HTTP_CODE::FORBIDDEN_REQUEST:
+      break;
+    case HTTP_CODE::FILE_REQUEST:
+      break;
+    case HTTP_CODE::INTERNAL_ERROR:
+      break;
+    case HTTP_CODE::CLOSED_CONNECTION:
+      break;
+  }
 }
+
 void HttpData::m_memcpy(char *text, int n) {
   memcpy(m_output_ + m_write_idx, text, n);
   m_write_idx += n;
 }
 
 void HttpData::m_memcpy(char *text) {
-  memset(m_input_, '\0', INPUT_BUFFER_SIZE);
   int size = strlen(text);
   memcpy(m_output_ + m_write_idx, text, size);
   m_write_idx += size;
 }
+
 void HttpData::setMInput(char *mInput) {
   memset(m_input_, '\0', m_content_length);
   reset();

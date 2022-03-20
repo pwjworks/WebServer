@@ -10,35 +10,18 @@ using namespace std;
 
 SimpleEpollServer::SimpleEpollServer(int port) : Server(port),
                                                  epoller_(make_shared<Epoller>()),
-                                                 http_data_(make_shared<HttpData>()) {
+                                                 http_data_(make_shared<HttpData>()),
+                                                 channel_ptr_(make_shared<Channel>()) {
   assert(set_nonblock(listenfd_) == true);
 }
 
 
 void SimpleEpollServer::handle_read(int fd) {
-  http_data_ = make_shared<HttpData>();
   http_data_->set_fd_(fd);
-  http_data_->handle_read();
-  http_data_->parse();
-  cout << "ok";
-  epoller_->epoll_del(fd);
-  // 简单打印客户端的信息
-  //  char *buf = new char[1024];
-  //  int m = recv(fd, buf, 1024, 0);
-  //  if (m < 0) return;
-  //  if (m == 0)
-  //    epoller_->epoll_del(fd);
-  //  else {
-  //    // cout << "recv from client: " << fd << "," << buf << endl;
-  //    http_data_->setMInput(buf);
-  //    http_data_->parse();
-  //    ssize_t n = writen(fd, http_data_->get_m_output(), http_data_->get_output_len());
-  //    // cout << n << endl;
-  //    if (n > 0) {
-  //      epoller_->epoll_del(fd);
-  //      close(fd);
-  //    }
-  //  }
+  auto cp = http_data_->get_channel();
+  cp->set_revents(revents);
+  cp->setFd(fd);
+  cp->handle_event();
 }
 
 
@@ -61,7 +44,7 @@ void SimpleEpollServer::start() {
     for (size_t i = 0; i < n; ++i) {
       if (epoller_->getEvents()[i].events & EPOLLIN) {
         int curr_fd = epoller_->getEvents()[i].data.fd;
-
+        revents = epoller_->getEvents()[i].events;
         if (curr_fd == listenfd_) {
           int clnt_fd = accept_new_conn();
           epoller_->epoll_add(clnt_fd, EPOLLIN, 1000);
@@ -74,11 +57,4 @@ void SimpleEpollServer::start() {
       }
     }
   }
-}
-
-void SimpleEpollServer::handle_write(int fd) {
-  //cout << "********************" << endl;
-  //cout << http_data_->getOutBuffer() << endl;
-  //string buf = "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Length: 11\r\nContent-type: text/plain\r\n\r\n";
-  //string buf1 = "Hello World";
 }

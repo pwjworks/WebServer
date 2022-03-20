@@ -22,11 +22,6 @@ public:
    * @param fd
    */
   virtual void handle_read(int fd) = 0;
-  /**
-   * 处理socket写事件
-   * @param fd
-   */
-  virtual void handle_write(int fd) = 0;
   virtual void start() = 0;
 
 
