@@ -1,5 +1,5 @@
 #include "SimpleEpollServer.h"
-#include "util.h"
+#include "Util.h"
 #include <cassert>
 #include <fcntl.h>
 #include <iostream>
@@ -16,23 +16,29 @@ SimpleEpollServer::SimpleEpollServer(int port) : Server(port),
 
 
 void SimpleEpollServer::handle_read(int fd) {
+  http_data_ = make_shared<HttpData>();
+  http_data_->set_fd_(fd);
+  http_data_->handle_read();
+  http_data_->parse();
+  cout << "ok";
+  epoller_->epoll_del(fd);
   // 简单打印客户端的信息
-  char *buf = new char[1024];
-  int m = recv(fd, buf, 1024, 0);
-  if (m < 0) return;
-  if (m == 0)
-    epoller_->epoll_del(fd);
-  else {
-    //cout << "recv from client: " << fd << "," << buf << endl;
-    http_data_->setMInput(buf);
-    http_data_->parse();
-    ssize_t n = writen(fd, http_data_->get_m_output(), http_data_->get_output_len());
-    //cout << n << endl;
-    if (n > 0) {
-      epoller_->epoll_del(fd);
-      close(fd);
-    }
-  }
+  //  char *buf = new char[1024];
+  //  int m = recv(fd, buf, 1024, 0);
+  //  if (m < 0) return;
+  //  if (m == 0)
+  //    epoller_->epoll_del(fd);
+  //  else {
+  //    // cout << "recv from client: " << fd << "," << buf << endl;
+  //    http_data_->setMInput(buf);
+  //    http_data_->parse();
+  //    ssize_t n = writen(fd, http_data_->get_m_output(), http_data_->get_output_len());
+  //    // cout << n << endl;
+  //    if (n > 0) {
+  //      epoller_->epoll_del(fd);
+  //      close(fd);
+  //    }
+  //  }
 }
 
 

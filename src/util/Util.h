@@ -1,6 +1,7 @@
 #include <string>
 
 
+ssize_t readn(int fd, void *buff, size_t n, bool &zero);
 ssize_t writen(int fd, void *buff, size_t n);
 /**
    * 设置非阻塞socket
