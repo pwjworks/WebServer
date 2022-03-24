@@ -17,6 +17,8 @@ HttpData::HttpData() : channel_(make_shared<Channel>()) {
   fd_ = channel_->get_fd();
 }
 HttpData::~HttpData() {
+  delete m_input_;
+  delete m_output_;
 }
 
 
