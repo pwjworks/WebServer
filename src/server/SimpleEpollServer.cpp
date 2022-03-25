@@ -8,8 +8,11 @@
 using namespace std;
 
 SimpleEpollServer::SimpleEpollServer(int port) : Server(port),
-                                                 epoller_(make_shared<Epoller>()) {
+                                                 epoller_(make_shared<Epoller>()),
+                                                 accept_channel_(make_shared<Channel>()) {
   assert(set_nonblock(listenfd_) == true);
+  accept_channel_->setFd(listenfd_);
+  accept_channel_->set_read_callback([this] { handle_new_conn(); });
 }
 
 
@@ -34,10 +37,9 @@ void SimpleEpollServer::start() {
         int curr_fd = epoller_->getEvents()[i].data.fd;
         revents = epoller_->getEvents()[i].events;
         if (curr_fd == listenfd_) {
-          int clnt_fd = accept_new_conn();
-          epoller_->epoll_add(clnt_fd, EPOLLIN, 1000);
-          // 设置非阻塞客户端socket
-          if (!set_nonblock(clnt_fd)) close(clnt_fd);
+          accept_channel_->set_revents(EPOLLIN | EPOLLET);
+          accept_channel_->set_events(0);
+          accept_channel_->handle_event();
         } else {
           handle_events(curr_fd);
         }
@@ -51,4 +53,11 @@ void SimpleEpollServer::handle_events(int fd) {
   cp->set_revents(revents);
   cp->setFd(fd);
   cp->handle_event();
+}
+
+void SimpleEpollServer::handle_new_conn() {
+  int clnt_fd = accept_new_conn();
+  epoller_->epoll_add(clnt_fd, EPOLLIN, 1000);
+  // 设置非阻塞客户端socket
+  if (!set_nonblock(clnt_fd)) close(clnt_fd);
 }
