@@ -1,14 +1,23 @@
 #pragma once
 
 #include <functional>
+#include <memory>
+
+class HttpData;
 
 class Channel {
 public:
   typedef std::function<void()> EventCallback;
   typedef std::function<void()> ReadEventCallback;
 
-  Channel();
+  explicit Channel(int fd);
   ~Channel();
+
+  void set_holder(const std::shared_ptr<HttpData> &holder) { holder_ = holder; }
+  std::shared_ptr<HttpData> get_holder() {
+    std::shared_ptr<HttpData> ret(holder_.lock());
+    return ret;
+  }
 
   void handle_event();
   void set_read_callback(ReadEventCallback cb) { readCallback_ = std::move(cb); }
@@ -44,5 +53,8 @@ private:
 
   int fd_;
   __uint32_t events_;
-  __uint32_t revents_;
+  __uint32_t revents_{};
+
+  // 方便找到上层持有该Channel的对象
+  std::weak_ptr<HttpData> holder_;
 };

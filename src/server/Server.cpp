@@ -10,7 +10,7 @@
 using namespace std;
 
 
-Server::Server(int port) : listenfd_(socket(AF_INET, SOCK_STREAM, 0)), http_data_(make_shared<HttpData>()) {
+Server::Server(int port) : listenfd_(socket(AF_INET, SOCK_STREAM, 0)) {
   assert(listenfd_ != -1);
   assert(server_fd_init(port) == true);
 }

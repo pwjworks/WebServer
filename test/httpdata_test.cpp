@@ -9,7 +9,7 @@
   } while (0)
 
 TEST(httpdata, parse_line) {
-  auto http = std::make_shared<HttpData>();
+  auto http = std::make_shared<HttpData>(1);
   test_parse_line("GET / HTTP/1.1\r\n", LINE_STATUS::LINE_OK);
   test_parse_line("GET / HTTP/1.1\r", LINE_STATUS::LINE_OPEN);
   test_parse_line("GET / HTTP/1.1\r\\", LINE_STATUS::LINE_OPEN);
@@ -24,7 +24,7 @@ TEST(httpdata, parse_line) {
   } while (0)
 
 TEST(httpdata, parse_request_line) {
-  auto http = std::make_shared<HttpData>();
+  auto http = std::make_shared<HttpData>(1);
   test_parse_request_line("GET / HTTP/1.1", true);
   test_parse_request_line("GET http://test/ HTTP/1.1", true);
   test_parse_request_line("POST / HTTP/1.1", true);
@@ -40,7 +40,7 @@ TEST(httpdata, parse_request_line) {
   } while (0)
 
 TEST(httpdata, parse_headers) {
-  auto http = std::make_shared<HttpData>();
+  auto http = std::make_shared<HttpData>(1);
   test_parse_headers("\0", true);
   test_parse_headers("Connection : keep-alive", true);
   test_parse_headers("Connection: keep-alive", true);

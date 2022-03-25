@@ -6,7 +6,7 @@
 
 using namespace std;
 
-HttpData::HttpData() : channel_(make_shared<Channel>()) {
+HttpData::HttpData(int fd) : fd_(fd), channel_(make_shared<Channel>(fd)) {
   channel_->set_read_callback([this] { handle_read(); });
   channel_->set_write_callback([this] { handle_write(); });
   channel_->set_conn_callback([this] { handle_conn(); });
@@ -14,7 +14,6 @@ HttpData::HttpData() : channel_(make_shared<Channel>()) {
   m_input_ = new char[INPUT_BUFFER_SIZE];
   m_output_ = new char[OUTPUT_BUFFER_SIZE];
   reset();
-  fd_ = channel_->get_fd();
 }
 HttpData::~HttpData() {
   delete m_input_;
@@ -169,7 +168,6 @@ void HttpData::parse() {
 void HttpData::reset() {
   m_url_ = nullptr;
   m_version_ = nullptr;
-  fd_ = 0;
   m_write_idx = 0;
   m_checked_idx = 0;
   m_content_length = 0;

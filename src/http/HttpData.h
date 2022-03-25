@@ -1,5 +1,5 @@
 #pragma once
-#include <Channel.h>
+#include "Channel.h"
 #include <cstring>
 #include <map>
 #include <memory>
@@ -74,7 +74,7 @@ public:
   typedef std::shared_ptr<Channel> ChannelPtr;
   static const int INPUT_BUFFER_SIZE = 2048;
   static const int OUTPUT_BUFFER_SIZE = 1024;
-  HttpData();
+  HttpData(int fd);
   ~HttpData();
 
   /**
@@ -174,7 +174,4 @@ private:
   PROCESS_STATE process_state_;
   // HTTP响应代码
   HTTP_CODE http_code_;
-
-
-private:
 };

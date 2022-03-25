@@ -1,10 +1,10 @@
 #include "Channel.h"
 #include <sys/epoll.h>
 
-Channel::Channel() : events_(0), fd_(0) {
+Channel::Channel(int fd) : events_(0), fd_(fd) {
 }
 
-Channel::~Channel() {}
+Channel::~Channel() = default;
 
 void Channel::handle_event() {
   events_ = 0;

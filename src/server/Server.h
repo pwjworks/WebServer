@@ -31,6 +31,5 @@ public:
 
 protected:
   __uint32_t revents;
-  std::shared_ptr<HttpData> http_data_;
   int listenfd_;
 };
