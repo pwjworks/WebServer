@@ -1,7 +1,6 @@
 #include "SimpleForkServer.h"
 #include "Util.h"
 #include <iostream>
-#include <netinet/in.h>
 #include <sys/wait.h>
 #include <unistd.h>
 

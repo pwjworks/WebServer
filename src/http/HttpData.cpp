@@ -183,7 +183,6 @@ void HttpData::reset() {
 }
 
 void HttpData::parse_content(char *text) {
-  printf("content\n");
   m_memcpy(text);
   // 主状态机状态迁移
   process_state_ = PROCESS_STATE::STATE_WRITE;
