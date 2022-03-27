@@ -1,5 +1,4 @@
 #pragma once
-#include "Channel.h"
 #include <cstring>
 #include <map>
 #include <memory>
@@ -25,7 +24,6 @@ enum class PROCESS_STATE {
   STATE_PARSE_REQUESTLINE = 1,
   STATE_PARSE_HEADERS,
   STATE_PARSE_CONTENT,
-  STATE_WRITE,
   STATE_FINISH
 };
 
@@ -71,10 +69,9 @@ struct cmp_str {
 
 class HttpData {
 public:
-  typedef std::shared_ptr<Channel> ChannelPtr;
   static const int INPUT_BUFFER_SIZE = 2048;
   static const int OUTPUT_BUFFER_SIZE = 1024;
-  HttpData(int fd);
+  explicit HttpData(int fd);
   ~HttpData();
 
   /**
@@ -125,7 +122,6 @@ public:
   char *get_line() { return m_input_ + m_start_line; };
 
 
-  ChannelPtr get_channel() { return channel_; }
   void set_fd_(int fd) { fd_ = fd; }
   void setMInput(char *mInput);
 
@@ -142,29 +138,27 @@ public:
   void m_memcpy(char *text);
 
 private:
-  // channel指针
-  ChannelPtr channel_;
   // 输入字符串
   char *m_input_;
   // 输出字符串
   char *m_output_;
   // HTTP请求URL
-  char *m_url_;
+  char *m_url_{};
   // HTTP请求版本
-  char *m_version_;
+  char *m_version_{};
 
   // 监听的socket
   int fd_;
   // 当前正在分析的字符在读缓冲区中的位置
-  int m_checked_idx;
+  int m_checked_idx{};
   // 正在解析的行的起始位置
-  int m_start_line;
+  int m_start_line{};
   // HTTP请求的消息体长度
-  int m_content_length;
+  int m_content_length{};
   // 输出缓冲区的已写长度
-  int m_write_idx;
+  int m_write_idx{};
   // 是否为长连接
-  bool keepAlive_;
+  bool keepAlive_{};
 
   std::map<char *, char *, cmp_str> headers_;
   CONNNECTION_STATUS connection_state_;

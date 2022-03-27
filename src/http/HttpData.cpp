@@ -1,23 +1,20 @@
 #include "HttpData.h"
 #include "Util.h"
 #include <cstring>
+#include <iostream>
 #include <sys/epoll.h>
 #include <unistd.h>
 
 using namespace std;
 
-HttpData::HttpData(int fd) : fd_(fd), channel_(make_shared<Channel>(fd)) {
-  channel_->set_read_callback([this] { handle_read(); });
-  channel_->set_write_callback([this] { handle_write(); });
-  channel_->set_conn_callback([this] { handle_conn(); });
-  channel_->set_error_callback([this] { handle_error(); });
+HttpData::HttpData(int fd) : fd_(fd) {
   m_input_ = new char[INPUT_BUFFER_SIZE];
   m_output_ = new char[OUTPUT_BUFFER_SIZE];
   reset();
 }
 HttpData::~HttpData() {
-  delete m_input_;
-  delete m_output_;
+  delete[] m_input_;
+  delete[] m_output_;
 }
 
 
@@ -92,7 +89,7 @@ bool HttpData::parse_headers(char *text) {
     if (m_content_length > m_checked_idx) {
       process_state_ = PROCESS_STATE::STATE_PARSE_CONTENT;
     } else {
-      process_state_ = PROCESS_STATE::STATE_WRITE;
+      process_state_ = PROCESS_STATE::STATE_FINISH;
     }
     return true;
   }
@@ -120,8 +117,7 @@ void HttpData::parse() {
   char *text;
   LINE_STATUS lineStatus;
   while ((lineStatus = parse_line()) == LINE_STATUS::LINE_OK ||
-         (lineStatus == LINE_STATUS::LINE_OPEN && process_state_ == PROCESS_STATE::STATE_PARSE_CONTENT) ||
-         process_state_ == PROCESS_STATE::STATE_WRITE) {
+         (lineStatus == LINE_STATUS::LINE_OPEN && process_state_ == PROCESS_STATE::STATE_PARSE_CONTENT)) {
     text = get_line();
     m_start_line = m_checked_idx;
     switch (process_state_) {
@@ -143,18 +139,11 @@ void HttpData::parse() {
           handle_error();
           process_state_ = PROCESS_STATE::STATE_FINISH;
         }
-
         break;
       }
         // 解析HTTP请求内容
       case PROCESS_STATE::STATE_PARSE_CONTENT: {
-
         parse_content(text);
-        break;
-      }
-      case PROCESS_STATE::STATE_WRITE: {
-        channel_->set_revents(EPOLLOUT);
-        process_state_ = PROCESS_STATE::STATE_FINISH;
         break;
       }
       case PROCESS_STATE::STATE_FINISH: {
@@ -183,17 +172,18 @@ void HttpData::reset() {
 }
 
 void HttpData::parse_content(char *text) {
+  printf("content\n");
   m_memcpy(text);
   // 主状态机状态迁移
-  process_state_ = PROCESS_STATE::STATE_WRITE;
+  process_state_ = PROCESS_STATE::STATE_FINISH;
 }
 
 
 void HttpData::handle_read() {
-  __uint32_t &events_ = channel_->get_events();
   do {
     bool zero = false;
     int read_num = readn(fd_, m_input_, INPUT_BUFFER_SIZE, zero);
+
     if (connection_state_ == CONNNECTION_STATUS::H_DISCONNECTING) {
       break;
     }
@@ -204,13 +194,9 @@ void HttpData::handle_read() {
       connection_state_ = CONNNECTION_STATUS::H_DISCONNECTING;
       if (read_num == 0) break;
     }
+    cout << "read success!";
     m_content_length = read_num;
   } while (false);
-  if (m_content_length > 0) {
-    parse();
-  } else {
-    handle_error();
-  }
 }
 
 void HttpData::analysis_request() {

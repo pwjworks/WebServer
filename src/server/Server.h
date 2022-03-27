@@ -5,7 +5,6 @@
 
 class Server {
 public:
-  typedef std::shared_ptr<HttpData> HttpDataPtr;
   explicit Server(int port);
   virtual ~Server();
 
@@ -21,11 +20,11 @@ public:
    * @return 客户端fd
    */
   int accept_new_conn();
-  /**
-   * 处理socket事件
-   * @param fd
-   */
-  virtual void handle_events(int fd) = 0;
+  //  /**
+  //   * 处理socket事件
+  //   * @param fd
+  //   */
+  //  virtual void handle_events(int fd) = 0;
   virtual void start() = 0;
 
 

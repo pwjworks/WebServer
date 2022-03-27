@@ -1,4 +1,3 @@
-#include "Channel.h"
 #include "HttpData.h"
 #include <memory>
 #include <sys/epoll.h>
@@ -6,23 +5,26 @@
 
 class Epoller {
 public:
-  typedef std::shared_ptr<Channel> ChannelPtr;
-  typedef std::shared_ptr<HttpData> HttpDataPtr;
+  Epoller(int, int);
   Epoller();
   ~Epoller() = default;
+  using HttpDataPtr = std::shared_ptr<HttpData>;
+  void epoll_add(const int &fd, __uint32_t fd_events_, int timeout);
+  void epoll_mod(const int &fd, __uint32_t fd_events_, int timeout);
+  void epoll_del(const int &fd);
+  void handle_event(int fd, __uint32_t revents_);
+  int handle_new_conn();
 
-  void epoll_add(ChannelPtr request, int timeout);
-  void epoll_mod(ChannelPtr request, int timeout);
-  void epoll_del(ChannelPtr request);
-  std::vector<ChannelPtr> get_events_request(int events_num);
-  std::vector<ChannelPtr> poll();
+  void poll();
 
+public:
   const std::vector<epoll_event> &getEvents() const;
 
 private:
   static const int MAXFDS = 100000;
+  int wakeupfd_;
+  int listenfd_;
   int epollfd_;
   std::vector<epoll_event> events_;
-  ChannelPtr fd2chan_[MAXFDS];
-  HttpDataPtr fd2http_[MAXFDS];
+  std::shared_ptr<HttpData> fd2http_[MAXFDS];
 };
