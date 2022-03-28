@@ -3,6 +3,8 @@
 #include <sys/epoll.h>
 #include <vector>
 
+#pragma once
+
 class Epoller {
 public:
   Epoller(int, int);
