@@ -1,4 +1,4 @@
-#include "EventLoop.h"
+#include "EventLoopThreadPool.h"
 #include "Server.h"
 #include <memory>
 #pragma once
@@ -6,12 +6,13 @@
 
 class SimpleEpollServer : public Server {
 public:
-  using EventLoopPtr = std::shared_ptr<EventLoop>;
+  using EventLoopThreadPoolPtr = std::shared_ptr<EventLoopThreadPool>;
   explicit SimpleEpollServer(int port);
   ~SimpleEpollServer() override = default;
   void start() override;
 
 
 private:
-  EventLoopPtr eventloop_ptr_;
+  bool quit_;
+  EventLoopThreadPoolPtr threadpool_ptr_;
 };

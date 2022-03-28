@@ -7,12 +7,14 @@ target_link_libraries(
         server_test
         #        gtest_main
         webserver
+        pthread
 )
 
 target_link_libraries(
         httpdata_test
         webserver
         gtest_main
+        pthread
 )
 
 include(GoogleTest)

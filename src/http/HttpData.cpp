@@ -1,15 +1,13 @@
 #include "HttpData.h"
 #include "Util.h"
 #include <cstring>
-#include <iostream>
-#include <sys/epoll.h>
 #include <unistd.h>
 
 using namespace std;
 
-HttpData::HttpData(int fd) : fd_(fd) {
-  m_input_ = new char[INPUT_BUFFER_SIZE];
-  m_output_ = new char[OUTPUT_BUFFER_SIZE];
+HttpData::HttpData(int fd) : fd_(fd), m_input_(new char[INPUT_BUFFER_SIZE]), m_output_(new char[OUTPUT_BUFFER_SIZE]) {
+  //  m_input_ = new char[INPUT_BUFFER_SIZE];
+  //  m_output_ = new char[OUTPUT_BUFFER_SIZE];
   reset();
 }
 HttpData::~HttpData() {
@@ -194,7 +192,6 @@ void HttpData::handle_read() {
       connection_state_ = CONNNECTION_STATUS::H_DISCONNECTING;
       if (read_num == 0) break;
     }
-    cout << "read success!";
     m_content_length = read_num;
   } while (false);
 }
@@ -217,7 +214,8 @@ void HttpData::analysis_request() {
 }
 
 void HttpData::handle_write() {
-  int n = writen(fd_, m_output_, m_write_idx);
+  int n = writen(fd_, m_output_, strlen(m_output_));
+  //std::cout << std::this_thread::get_id() << " handle:" << n << std::endl;
 }
 
 void HttpData::handle_conn() {

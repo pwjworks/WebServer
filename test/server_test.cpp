@@ -7,8 +7,7 @@
 #include "SimpleForkServer.h"
 
 int main() {
-
-  auto server = std::make_shared<SimpleEpollServer>(12344);
+  auto server = std::make_shared<SimpleEpollServer>(12343);
   server->start();
   return 0;
 }

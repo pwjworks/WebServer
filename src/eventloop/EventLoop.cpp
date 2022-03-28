@@ -12,10 +12,10 @@ int createEventfd() {
   return evtfd;
 }
 
-EventLoop::EventLoop(int listenfd) : looping_(false),
-                                     quit_(false),
-                                     wakeup_fd_(createEventfd()),
-                                     epoller_ptr(std::make_shared<Epoller>(listenfd, wakeup_fd_)) {
+EventLoop::EventLoop() : looping_(false),
+                         quit_(false),
+                         wakeup_fd_(createEventfd()),
+                         epoller_ptr(std::make_shared<Epoller>(wakeup_fd_)) {
   epoller_ptr->epoll_add(wakeup_fd_, EPOLLIN | EPOLLET, 1000);
 }
 
@@ -35,9 +35,7 @@ void EventLoop::loop() {
   looping_ = true;
   quit_ = false;
   while (!quit_) {
-    event_handling_ = true;
     epoller_ptr->poll();
-    event_handling_ = false;
   }
   looping_ = false;
 }

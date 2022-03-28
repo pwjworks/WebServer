@@ -69,7 +69,7 @@ struct cmp_str {
 
 class HttpData {
 public:
-  static const int INPUT_BUFFER_SIZE = 2048;
+  static const int INPUT_BUFFER_SIZE = 1024;
   static const int OUTPUT_BUFFER_SIZE = 1024;
   explicit HttpData(int fd);
   ~HttpData();

@@ -2,16 +2,26 @@
 #include "Util.h"
 #include <cassert>
 #include <iostream>
+#include <unistd.h>
 
 using namespace std;
 
 SimpleEpollServer::SimpleEpollServer(int port) : Server(port),
-                                                 eventloop_ptr_(make_shared<EventLoop>(listenfd_)) {
+                                                 threadpool_ptr_(make_shared<EventLoopThreadPool>()),
+                                                 quit_(false) {
   assert(set_nonblock(listenfd_) == true);
-  eventloop_ptr_->addToPoller(listenfd_, EPOLLIN | EPOLLET);
+  threadpool_ptr_->init(16);
 }
 
 void SimpleEpollServer::start() {
   cout << "Running..." << endl;
-  eventloop_ptr_->loop();
+  threadpool_ptr_->start();
+  int accept_fd = -1;
+  while (!quit_) {
+    accept_fd = accept_new_conn();
+    if (accept_fd > 0 && accept_fd < 1000 && set_nonblock(accept_fd)) {
+      threadpool_ptr_->add_fd(accept_fd);
+      //close(accept_fd);
+    }
+  }
 }

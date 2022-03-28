@@ -5,6 +5,7 @@ add_library(webserver SHARED
         server/SimpleForkServer.cpp
         epoller/Epoller.cpp
         eventloop/EventLoop.cpp
+        eventloop/EventLoopThreadPool.cpp
         http/HttpData.cpp
         util/Util.cpp
         )
