@@ -1,4 +1,5 @@
 #pragma once
+#include "Buffer.h"
 #include <cstring>
 #include <map>
 #include <memory>
@@ -52,15 +53,6 @@ enum class LINE_STATUS {
 };
 
 
-/**
- * 连接状态
- */
-enum CONNNECTION_STATUS {
-  H_CONNECTED = 0,
-  H_DISCONNECTING,
-  H_DISCONNECTED
-};
-
 struct cmp_str {
   bool operator()(char const *a, char const *b) const {
     return std::strcmp(a, b) < 0;
@@ -69,8 +61,7 @@ struct cmp_str {
 
 class HttpData {
 public:
-  static const int INPUT_BUFFER_SIZE = 1024;
-  static const int OUTPUT_BUFFER_SIZE = 1024;
+  using BufferPtr = std::shared_ptr<Buffer>;
   explicit HttpData(int fd);
   ~HttpData();
 
@@ -119,7 +110,7 @@ public:
    * 获取一行数据
    * @return
    */
-  char *get_line() { return m_input_ + m_start_line; };
+  char *get_line() { return read_buff_.Peek() + m_start_line; };
 
 
   void set_fd_(int fd) { fd_ = fd; }
@@ -138,6 +129,8 @@ public:
   void m_memcpy(char *text);
 
 private:
+  Buffer read_buff_;
+  Buffer write_buff_;
   // 输入字符串
   char *m_input_;
   // 输出字符串
@@ -161,7 +154,6 @@ private:
   bool keepAlive_{};
 
   std::map<char *, char *, cmp_str> headers_;
-  CONNNECTION_STATUS connection_state_;
   // 请求方法
   METHOD m_method;
   // 主状态机当前所处的状态

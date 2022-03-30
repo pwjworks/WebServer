@@ -1,4 +1,5 @@
 add_library(webserver SHARED
+        buffer/Buffer.cpp
         server/Server.cpp
         server/ReactorServer.cpp
         server/SimpleEpollServer.cpp

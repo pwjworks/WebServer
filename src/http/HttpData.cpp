@@ -1,40 +1,36 @@
 #include "HttpData.h"
 #include "Util.h"
 #include <cstring>
-#include <unistd.h>
 
 using namespace std;
 
-HttpData::HttpData(int fd) : fd_(fd), m_input_(new char[INPUT_BUFFER_SIZE]), m_output_(new char[OUTPUT_BUFFER_SIZE]) {
-  //  m_input_ = new char[INPUT_BUFFER_SIZE];
-  //  m_output_ = new char[OUTPUT_BUFFER_SIZE];
+HttpData::HttpData(int fd) : fd_(fd) {
   reset();
 }
 HttpData::~HttpData() {
-  delete[] m_input_;
-  delete[] m_output_;
 }
 
 
 LINE_STATUS HttpData::parse_line() {
   // 当前检查的字符
   char tmp;
+  char *input = read_buff_.Peek();
   for (; m_checked_idx < m_content_length; ++m_checked_idx) {
-    tmp = m_input_[m_checked_idx];
+    tmp = input[m_checked_idx];
     if (tmp == '\r') {
       // 当前字符为已读的最后一个字符
       if ((m_checked_idx + 1) == m_content_length) {
         return LINE_STATUS::LINE_OPEN;
-      } else if (m_input_[m_checked_idx + 1] == '\n') {// 检测到行结尾
-        m_input_[m_checked_idx++] = '\0';
-        m_input_[m_checked_idx++] = '\0';
+      } else if (input[m_checked_idx + 1] == '\n') {// 检测到行结尾
+        input[m_checked_idx++] = '\0';
+        input[m_checked_idx++] = '\0';
         return LINE_STATUS::LINE_OK;
       }
       return LINE_STATUS::LINE_OPEN;
     } else if (tmp == '\n') {
-      if ((m_checked_idx > 1) && m_input_[m_checked_idx - 1] == '\r') {// 检测到行结尾，同时上一个字符为'\r'
-        m_input_[m_checked_idx - 1] = '\0';
-        m_input_[m_checked_idx++] = '\0';
+      if ((m_checked_idx > 1) && input[m_checked_idx - 1] == '\r') {// 检测到行结尾，同时上一个字符为'\r'
+        input[m_checked_idx - 1] = '\0';
+        input[m_checked_idx++] = '\0';
         return LINE_STATUS::LINE_OK;
       }
       return LINE_STATUS::LINE_BAD;
@@ -161,12 +157,11 @@ void HttpData::reset() {
   m_start_line = 0;
   keepAlive_ = false;
   headers_.clear();
-  connection_state_ = CONNNECTION_STATUS::H_CONNECTED;
   m_method = METHOD::GET;
   process_state_ = PROCESS_STATE::STATE_PARSE_REQUESTLINE;
   http_code_ = HTTP_CODE::BAD_REQUEST;
-  memset(m_input_, '\0', INPUT_BUFFER_SIZE);
-  memset(m_output_, '\0', OUTPUT_BUFFER_SIZE);
+  write_buff_.RetrieveAll();
+  read_buff_.RetrieveAll();
 }
 
 void HttpData::parse_content(char *text) {
@@ -178,44 +173,35 @@ void HttpData::parse_content(char *text) {
 
 
 void HttpData::handle_read() {
-  do {
-    bool zero = false;
-    int read_num = readn(fd_, m_input_, INPUT_BUFFER_SIZE, zero);
-
-    if (connection_state_ == CONNNECTION_STATUS::H_DISCONNECTING) {
-      break;
-    }
-    if (read_num < 0) {
-      handle_error();
-      break;
-    } else if (zero) {
-      connection_state_ = CONNNECTION_STATUS::H_DISCONNECTING;
-      if (read_num == 0) break;
-    }
-    m_content_length = read_num;
-  } while (false);
+  ssize_t len = -1;
+  int err_ = 0;
+  len = read_buff_.ReadFd(fd_, &err_);
+  if (len <= 0) {
+    return;
+  } else {
+    m_content_length += len;
+  }
 }
 
 void HttpData::analysis_request() {
-  m_memcpy("HTTP/1.1 200 OK\r\n", 17);
+  write_buff_.Append("HTTP/1.1 200 OK\r\n", 17);
   if (headers_.find("Connection") != headers_.end() && (strcasecmp(headers_["Connection"], "keep-alive") == 0)) {
     keepAlive_ = true;
     // 字符串拼接
-    m_memcpy("Connection: keep-alive\r\nKeep-Alive: timeout=300000\r\n", 52);
+    write_buff_.Append("Connection: keep-alive\r\nKeep-Alive: timeout=300000\r\n", 52);
   }
-  m_memcpy("Content-Type: text/html; charset=utf-8\r\n\r\n<h1>Hello world!</h1><h3>Your headers:</h3>", 85);
+  write_buff_.Append("Content-Type: text/html; charset=utf-8\r\n\r\n<h1>Hello world!</h1><h3>Your headers:</h3>", 85);
   for (auto &kv : headers_) {
-    m_memcpy("<div>");
-    m_memcpy(kv.first);
-    m_memcpy(":");
-    m_memcpy(kv.second);
-    m_memcpy("</div>");
+    write_buff_.Append("<div>", 5);
+    write_buff_.Append(kv.first, strlen(kv.first));
+    write_buff_.Append(":", 1);
+    write_buff_.Append(kv.second, strlen(kv.second));
+    write_buff_.Append("</div>", 6);
   }
 }
 
 void HttpData::handle_write() {
-  int n = writen(fd_, m_output_, strlen(m_output_));
-  //std::cout << std::this_thread::get_id() << " handle:" << n << std::endl;
+  int n = writen(fd_, write_buff_.Peek(), write_buff_.WritableBytes());
 }
 
 void HttpData::handle_conn() {
