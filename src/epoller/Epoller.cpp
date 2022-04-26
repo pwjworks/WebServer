@@ -18,6 +18,7 @@ void Epoller::epoll_add(const int &fd, __uint32_t fd_events_, int timeout) {
   struct epoll_event event {};
   event.data.fd = fd;
   event.events = fd_events_;
+  if (fd2http_[fd] != nullptr) fd2http_[fd].reset();
   fd2http_[fd] = std::make_shared<HttpData>(fd);
   if (epoll_ctl(epollfd_, EPOLL_CTL_ADD, fd, &event) < 0) {
     std::cout << "epoll add error!" << std::endl;
