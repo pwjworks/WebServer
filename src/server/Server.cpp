@@ -2,10 +2,7 @@
 #include <HttpData.h>
 #include <cassert>
 #include <cstring>
-#include <fcntl.h>
-#include <iostream>
 #include <netinet/in.h>
-#include <unistd.h>
 
 using namespace std;
 

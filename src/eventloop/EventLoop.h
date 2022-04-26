@@ -16,14 +16,17 @@ public:
     wakeup();
     epoller_ptr->epoll_del(fd);
   }
+
   void updatePoller(int fd, __uint32_t revents_) {
     wakeup();
     epoller_ptr->epoll_mod(fd, revents_, 1000);
   }
+
   void addToPoller(int fd, __uint32_t revents_, int timeout = 0) {
     wakeup();
     epoller_ptr->epoll_add(fd, revents_, timeout);
   }
+
   void wakeup();
   void loop();
   void quit();

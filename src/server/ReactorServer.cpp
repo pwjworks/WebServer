@@ -20,7 +20,6 @@ void ReactorServer::start() {
     accept_fd = accept_new_conn();
     if (accept_fd > 0 && accept_fd < 1000 && set_nonblock(accept_fd)) {
       threadpool_ptr_->add_fd(accept_fd);
-      //close(accept_fd);
     }
   }
 }

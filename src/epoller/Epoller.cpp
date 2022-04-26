@@ -23,6 +23,7 @@ void Epoller::epoll_add(const int &fd, __uint32_t fd_events_, int timeout) {
     std::cout << "epoll add error!" << std::endl;
   }
 }
+
 void Epoller::epoll_mod(const int &fd, __uint32_t fd_events_, int timeout) {
   struct epoll_event event {};
   event.data.fd = fd;
@@ -33,11 +34,9 @@ void Epoller::epoll_mod(const int &fd, __uint32_t fd_events_, int timeout) {
   }
 }
 void Epoller::epoll_del(const int &fd) {
-
-
-  if (epoll_ctl(epollfd_, EPOLL_CTL_DEL, fd, NULL) < 0) {
-    //std::cout << "epoll del error!" << std::endl;
-    std::cout << errno << std::endl;
+  if (epoll_ctl(epollfd_, EPOLL_CTL_DEL, fd, nullptr) < 0) {
+    std::cout << "epoll del error!" << std::endl;
+    //    std::cout << errno << std::endl;
   }
 }
 void Epoller::poll() {
@@ -64,7 +63,6 @@ void Epoller::handle_event(int fd, __uint32_t revents_) {
     fd2http_[fd]->handle_read();
     fd2http_[fd]->parse();
     fd2http_[fd]->handle_write();
-    epoll_del(fd);
     fd2http_[fd]->handle_conn();
     fd2http_[fd].reset();
   }

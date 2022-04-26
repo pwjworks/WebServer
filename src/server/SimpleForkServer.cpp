@@ -32,10 +32,3 @@ void SimpleForkServer::start() {
     }
   }
 }
-//void SimpleForkServer::handle_events(int fd) {
-//  cout << fd << endl;
-//  http_data_->set_fd_(fd);
-//  http_data_->handle_read();
-//  http_data_->handle_write();
-//  http_data_->handle_conn();
-//}

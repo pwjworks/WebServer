@@ -201,7 +201,7 @@ void HttpData::analysis_request() {
 }
 
 void HttpData::handle_write() {
-  int n = writen(fd_, write_buff_.Peek(), write_buff_.WritableBytes());
+  write_buff_.WriteFd(fd_, nullptr);
 }
 
 void HttpData::handle_conn() {
